@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "autoname": "format:BANK-{####}",
+ "creation": "2026-03-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "bank_naam",
+  "koppeling_type",
+  "column_break_hdr1",
+  "actief",
+  "laatste_sync",
+  "section_break_ponto",
+  "ponto_client_id",
+  "ponto_client_secret",
+  "column_break_ponto1",
+  "ponto_refresh_token",
+  "account_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "bank_naam",
+   "fieldtype": "Select",
+   "label": "Bank",
+   "options": "ING\nRabobank\nABN AMRO\nBunq\nAnders",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "Ponto",
+   "fieldname": "koppeling_type",
+   "fieldtype": "Select",
+   "label": "Koppeling type",
+   "options": "Ponto\nPSD2 Direct\nCSV",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_hdr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 1,
+   "fieldname": "actief",
+   "fieldtype": "Check",
+   "label": "Actief",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "laatste_sync",
+   "fieldtype": "Datetime",
+   "label": "Laatste synchronisatie",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "depends_on": "eval:doc.koppeling_type=='Ponto'",
+   "fieldname": "section_break_ponto",
+   "fieldtype": "Section Break",
+   "label": "Ponto Credentials"
+  },
+  {
+   "depends_on": "eval:doc.koppeling_type=='Ponto'",
+   "fieldname": "ponto_client_id",
+   "fieldtype": "Data",
+   "label": "Ponto Client ID"
+  },
+  {
+   "depends_on": "eval:doc.koppeling_type=='Ponto'",
+   "fieldname": "ponto_client_secret",
+   "fieldtype": "Password",
+   "label": "Ponto Client Secret"
+  },
+  {
+   "fieldname": "column_break_ponto1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.koppeling_type=='Ponto'",
+   "fieldname": "ponto_refresh_token",
+   "fieldtype": "Password",
+   "label": "Ponto Refresh Token"
+  },
+  {
+   "depends_on": "eval:doc.koppeling_type=='Ponto'",
+   "fieldname": "account_id",
+   "fieldtype": "Data",
+   "label": "Account ID"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-03-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NixFact Integration",
+ "name": "NixFact Bank Koppeling",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

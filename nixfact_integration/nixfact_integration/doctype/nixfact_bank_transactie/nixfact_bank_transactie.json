@@ -1,0 +1,162 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-03-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "transactie_id",
+  "bank_koppeling",
+  "column_break_hdr1",
+  "datum",
+  "status",
+  "section_break_details",
+  "bedrag",
+  "van_naar",
+  "column_break_details1",
+  "naam",
+  "referentie",
+  "section_break_omschrijving",
+  "omschrijving",
+  "section_break_matching",
+  "confidence_score",
+  "column_break_matching1",
+  "gekoppeld_aan_type",
+  "gekoppeld_aan"
+ ],
+ "fields": [
+  {
+   "fieldname": "transactie_id",
+   "fieldtype": "Data",
+   "label": "Transactie ID",
+   "unique": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "bank_koppeling",
+   "fieldtype": "Link",
+   "label": "Bank Koppeling",
+   "options": "NixFact Bank Koppeling",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_hdr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "datum",
+   "fieldtype": "Date",
+   "label": "Datum",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "Onverwerkt",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Onverwerkt\nMatch gevonden\nAfgeleterd\nGenegeerd",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "section_break_details",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "bedrag",
+   "fieldtype": "Currency",
+   "label": "Bedrag",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "van_naar",
+   "fieldtype": "Data",
+   "label": "IBAN"
+  },
+  {
+   "fieldname": "column_break_details1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "naam",
+   "fieldtype": "Data",
+   "label": "Naam tegenpartij",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "referentie",
+   "fieldtype": "Data",
+   "label": "Betalingsreferentie"
+  },
+  {
+   "fieldname": "section_break_omschrijving",
+   "fieldtype": "Section Break",
+   "label": "Omschrijving"
+  },
+  {
+   "fieldname": "omschrijving",
+   "fieldtype": "Small Text",
+   "label": "Omschrijving"
+  },
+  {
+   "fieldname": "section_break_matching",
+   "fieldtype": "Section Break",
+   "label": "Matching",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "confidence_score",
+   "fieldtype": "Percent",
+   "label": "Confidence Score",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_matching1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "gekoppeld_aan_type",
+   "fieldtype": "Link",
+   "label": "Gekoppeld aan type",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "gekoppeld_aan",
+   "fieldtype": "Dynamic Link",
+   "label": "Gekoppeld aan",
+   "options": "gekoppeld_aan_type"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-03-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NixFact Integration",
+ "name": "NixFact Bank Transactie",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  }
+ ],
+ "search_fields": "naam,referentie,omschrijving,status",
+ "sort_field": "datum",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
