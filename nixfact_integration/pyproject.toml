@@ -1,13 +1,19 @@
 [project]
 name = "nixfact_integration"
 authors = [
-    { name = "Nick Aldewereld", email = "nick@nixpay.nl" }
+    { name = "Nick Aldewereld", email = "nick@nixpay.nl" },
 ]
 description = "WeFact-inspired invoicing system for ERPNext"
 requires-python = ">=3.10"
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "AGPL-3.0-or-later" }
 dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://nixfact.eu"
+Documentation = "https://docs.nixfact.eu"
+Repository = "https://github.com/NickAldewereld/erpnext-nixauce"
+"Commercial License" = "mailto:nick@nixpay.nl"
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]

@@ -20,3 +20,6 @@ All notable changes to NIXFact will be documented in this file.
 - **i18n**: Full translations in NL, EN, FR, DE, ES
 - **Docker deployment**: Complete Docker Compose setup with MariaDB, Redis, workers
 - **Operational scripts**: Backup, restore, and update automation
+
+### Changed
+- **License**: Switched from MIT to AGPL-3.0-or-later with dual licensing option

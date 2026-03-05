@@ -1,7 +1,7 @@
 # NIXFact
 
 [![CI](https://github.com/NickAldewereld/erpnext-nixauce/actions/workflows/ci.yml/badge.svg)](https://github.com/NickAldewereld/erpnext-nixauce/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Frappe](https://img.shields.io/badge/Frappe-v17-blue)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v17-green)](https://erpnext.com)
 
@@ -19,7 +19,7 @@ Open-source WeFact alternative built on ERPNext.
 - Statistics Dashboard (revenue, costs, VAT, customer breakdown)
 - Email Templates (invoices, reminders, quotes)
 - Multi-company support
-- Self-hosted & open-source (MIT)
+- Self-hosted & open-source (AGPL-3.0)
 
 ## Installation
 
@@ -131,7 +131,19 @@ See [docs/architecture.md](docs/architecture.md) for a technical deep-dive.
 
 ## License
 
-MIT
+NIXFact is licensed under **AGPL-3.0**.
+
+**What this means:**
+- **Free** for self-hosted use
+- **Open-source** — you can modify and contribute
+- **SaaS restriction** — if you offer NIXFact as a service, you must open-source your entire platform
+- **Commercial license** available for businesses that want to keep modifications private
+
+**Copyright holder:** Nick Aldewereld / NIXPAY B.V.
+
+For commercial licensing inquiries: nick@nixpay.nl
+
+See [LICENSE](LICENSE) and [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) for details.
 
 ## Author
 
