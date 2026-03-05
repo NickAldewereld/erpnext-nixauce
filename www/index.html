@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIXFact - Open-Source Facturatie voor Nederland</title>
+    <meta name="description" content="NIXFact: gratis, open-source facturatiesoftware op ERPNext. Offertes, facturen, abonnementen, bankintegratie, Mollie betalingen en UBL e-facturatie.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="hero">
+        <nav class="nav">
+            <div class="nav-brand">NIXFact</div>
+            <div class="nav-links">
+                <a href="#features">Functies</a>
+                <a href="#integrations">Integraties</a>
+                <a href="#install">Installatie</a>
+                <a href="https://github.com/NickAldewereld/erpnext-nixauce" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </nav>
+        <div class="hero-content">
+            <h1>Facturatie die werkt.<br>Open-source. Gratis.</h1>
+            <p class="hero-subtitle">
+                NIXFact is een complete facturatieoplossing gebouwd op ERPNext.
+                Van offerte tot betaling, alles in een systeem.
+            </p>
+            <div class="hero-actions">
+                <a href="#install" class="btn btn-primary">Aan de slag</a>
+                <a href="https://github.com/NickAldewereld/erpnext-nixauce" class="btn btn-secondary" target="_blank" rel="noopener">Bekijk op GitHub</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="section">
+        <h2>Alles wat je nodig hebt</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">&#128196;</div>
+                <h3>Offertes &amp; Facturen</h3>
+                <p>Automatische nummering, BTW-berekening, vervaldatumbeheer en professionele PDF-uitvoer.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128257;</div>
+                <h3>Abonnementen</h3>
+                <p>Automatische facturatie op maand-, kwartaal-, halfjaar- of jaarbasis. Set it and forget it.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128176;</div>
+                <h3>Mollie Betalingen</h3>
+                <p>Online betaallinks via iDEAL, creditcard en meer. Automatische statusupdates via webhooks.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#127974;</div>
+                <h3>Bankintegratie</h3>
+                <p>Transacties importeren via Ponto API. Automatische matching met openstaande facturen.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128232;</div>
+                <h3>Herinneringen</h3>
+                <p>Automatische betalingsherinneringen en aanmaningen. Nooit meer handmatig nabellen.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128200;</div>
+                <h3>Statistieken</h3>
+                <p>Omzetoverzichten, BTW-rapportages, kosten per categorie en klantanalyses.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128462;</div>
+                <h3>UBL E-facturatie</h3>
+                <p>Peppol BIS 3.0 compliant UBL 2.1 XML-generatie voor digitale factuuruitwisseling.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#127758;</div>
+                <h3>Meertalig</h3>
+                <p>Volledig vertaald in Nederlands, Engels, Frans, Duits en Spaans.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="integrations" class="section section-alt">
+        <h2>Gebouwd op ERPNext</h2>
+        <p class="section-subtitle">
+            NIXFact is een Frappe-app die naadloos integreert met het ERPNext-ecosysteem.
+            Gebruik bestaande klant-, leverancier- en bedrijfsgegevens, of draai standalone.
+        </p>
+        <div class="integration-logos">
+            <div class="integration">
+                <strong>Frappe Framework</strong>
+                <span>v17+</span>
+            </div>
+            <div class="integration">
+                <strong>ERPNext</strong>
+                <span>v17+</span>
+            </div>
+            <div class="integration">
+                <strong>Mollie</strong>
+                <span>Payments API</span>
+            </div>
+            <div class="integration">
+                <strong>Ponto</strong>
+                <span>Banking API</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="install" class="section">
+        <h2>Installatie</h2>
+        <div class="install-steps">
+            <div class="code-block">
+                <pre><code># Voeg NIXFact toe aan je bench
+bench get-app https://github.com/NickAldewereld/erpnext-nixauce
+
+# Installeer op je site
+bench --site jouw-site.local install-app nixfact_integration
+
+# Of gebruik Docker
+cd deployment/docker
+cp .env.example .env
+# Pas .env aan met je instellingen
+docker compose up -d</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>
+            NIXFact is open-source software onder de MIT-licentie.
+        </p>
+        <p>
+            <a href="https://github.com/NickAldewereld/erpnext-nixauce" target="_blank" rel="noopener">GitHub</a>
+            &middot;
+            <a href="https://github.com/NickAldewereld/erpnext-nixauce/issues" target="_blank" rel="noopener">Issues</a>
+            &middot;
+            <a href="https://github.com/NickAldewereld/erpnext-nixauce/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Bijdragen</a>
+        </p>
+    </footer>
+</body>
+</html>
