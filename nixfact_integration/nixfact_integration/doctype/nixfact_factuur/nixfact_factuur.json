@@ -28,6 +28,10 @@
   "column_break_betaling1",
   "referentie",
   "abonnement",
+  "section_break_mollie",
+  "mollie_payment_id",
+  "column_break_mollie1",
+  "mollie_payment_url",
   "section_break_herinnering",
   "herinnering_verstuurd",
   "herinnering_datum",
@@ -183,6 +187,28 @@
    "fieldtype": "Link",
    "label": "Abonnement",
    "options": "NixFact Abonnement"
+  },
+  {
+   "fieldname": "section_break_mollie",
+   "fieldtype": "Section Break",
+   "label": "Mollie",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "mollie_payment_id",
+   "fieldtype": "Data",
+   "label": "Mollie Payment ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_mollie1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mollie_payment_url",
+   "fieldtype": "Data",
+   "label": "Mollie Payment URL",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_herinnering",
