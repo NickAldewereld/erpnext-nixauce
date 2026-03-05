@@ -21,6 +21,13 @@ DOCTYPE_NUMBERING = {
 		"gebruik_maand_factuur",
 		"factuurnummer",
 	),
+	"NixFact Inkoopfactuur": (
+		"inkoopfactuur_voorvoegsel",
+		"inkoopfactuur_volgnummer",
+		"gebruik_jaar_inkoopfactuur",
+		"gebruik_maand_inkoopfactuur",
+		"inkoopfactuur_nr",
+	),
 }
 
 

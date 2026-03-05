@@ -1,0 +1,215 @@
+{
+ "actions": [],
+ "creation": "2026-03-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "inkoopfactuur_nr",
+  "leverancier",
+  "column_break_hdr1",
+  "status",
+  "company",
+  "section_break_dates",
+  "factuurdatum",
+  "column_break_dates1",
+  "betalingskenmerk",
+  "section_break_bedragen",
+  "bedrag_excl",
+  "btw_percentage",
+  "btw_bedrag",
+  "column_break_bedragen1",
+  "bedrag_incl",
+  "section_break_categorie",
+  "kostencategorie",
+  "column_break_cat1",
+  "project",
+  "section_break_document",
+  "document",
+  "section_break_verwerking",
+  "verwerkt_op",
+  "column_break_verw1",
+  "opmerkingen"
+ ],
+ "fields": [
+  {
+   "fieldname": "inkoopfactuur_nr",
+   "fieldtype": "Data",
+   "label": "Inkoopfactuur Nr",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "leverancier",
+   "fieldtype": "Link",
+   "label": "Leverancier",
+   "options": "Supplier",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_hdr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Te verwerken",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Te verwerken\nGeboekt\nBetaald",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Bedrijf",
+   "options": "Company",
+   "default": "{defaults.company}"
+  },
+  {
+   "fieldname": "section_break_dates",
+   "fieldtype": "Section Break",
+   "label": "Datums"
+  },
+  {
+   "fieldname": "factuurdatum",
+   "fieldtype": "Date",
+   "label": "Factuurdatum",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_dates1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "betalingskenmerk",
+   "fieldtype": "Data",
+   "label": "Betalingskenmerk"
+  },
+  {
+   "fieldname": "section_break_bedragen",
+   "fieldtype": "Section Break",
+   "label": "Bedragen"
+  },
+  {
+   "fieldname": "bedrag_excl",
+   "fieldtype": "Currency",
+   "label": "Bedrag Excl. BTW",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "21",
+   "fieldname": "btw_percentage",
+   "fieldtype": "Percent",
+   "label": "BTW %"
+  },
+  {
+   "fieldname": "btw_bedrag",
+   "fieldtype": "Currency",
+   "label": "BTW Bedrag",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_bedragen1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bedrag_incl",
+   "fieldtype": "Currency",
+   "label": "Bedrag Incl. BTW",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "section_break_categorie",
+   "fieldtype": "Section Break",
+   "label": "Categorisering"
+  },
+  {
+   "fieldname": "kostencategorie",
+   "fieldtype": "Link",
+   "label": "Kostencategorie",
+   "options": "NixFact Kostencategorie"
+  },
+  {
+   "fieldname": "column_break_cat1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "section_break_document",
+   "fieldtype": "Section Break",
+   "label": "Document"
+  },
+  {
+   "fieldname": "document",
+   "fieldtype": "Attach",
+   "label": "Document (PDF/afbeelding)"
+  },
+  {
+   "fieldname": "section_break_verwerking",
+   "fieldtype": "Section Break",
+   "label": "Verwerking",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "verwerkt_op",
+   "fieldtype": "Datetime",
+   "label": "Verwerkt op",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_verw1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "opmerkingen",
+   "fieldtype": "Small Text",
+   "label": "Opmerkingen"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-03-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NixFact Integration",
+ "name": "NixFact Inkoopfactuur",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  }
+ ],
+ "search_fields": "leverancier,status,kostencategorie",
+ "sort_field": "factuurdatum",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

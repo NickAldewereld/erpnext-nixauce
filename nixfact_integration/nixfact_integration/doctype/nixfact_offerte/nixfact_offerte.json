@@ -9,6 +9,7 @@
   "column_break_1",
   "klant",
   "offerte_datum",
+  "company",
   "section_break_1",
   "bedrag_excl",
   "bedrag_incl",
@@ -41,6 +42,13 @@
    "fieldtype": "Date",
    "label": "Offerte Datum",
    "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Bedrijf",
+   "options": "Company",
+   "default": "{defaults.company}"
   },
   {
    "fieldname": "section_break_1",

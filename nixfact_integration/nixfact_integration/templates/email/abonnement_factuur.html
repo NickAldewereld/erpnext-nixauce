@@ -1,0 +1,38 @@
+<h2>Abonnementsfactuur {{ doc.factuurnummer }}</h2>
+
+<p>Beste {{ doc.klant_naam or doc.klant }},</p>
+
+<p>Hierbij ontvangt u de periodieke factuur voor uw abonnement.</p>
+
+<table style="border-collapse: collapse; width: 100%; max-width: 400px; margin: 20px 0;">
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Factuurnummer</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;"><strong>{{ doc.factuurnummer }}</strong></td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Omschrijving</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">{{ doc.referentie }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Periode</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">{{ doc.factuur_datum }} - {{ volgende_datum }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Vervaldatum</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">{{ doc.vervaldatum }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; font-weight: bold;">Totaal incl. BTW</td>
+    <td style="padding: 8px; text-align: right; font-weight: bold;">&euro; {{ "%.2f"|format(doc.bedrag_incl_btw) }}</td>
+  </tr>
+</table>
+
+{% if betaallink %}
+<p>
+  <a href="{{ betaallink }}" style="display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px;">
+    Nu betalen
+  </a>
+</p>
+{% endif %}
+
+<p>Met vriendelijke groet,<br>{{ company_name }}</p>

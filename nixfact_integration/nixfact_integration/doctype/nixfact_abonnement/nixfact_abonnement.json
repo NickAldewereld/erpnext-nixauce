@@ -10,6 +10,7 @@
   "column_break_hdr1",
   "omschrijving",
   "status",
+  "company",
   "section_break_bedragen",
   "bedrag_excl_btw",
   "btw_percentage",
@@ -60,6 +61,13 @@
    "options": "Actief\nGepauzeerd\nBeeindigd",
    "reqd": 1,
    "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Bedrijf",
+   "options": "Company",
+   "default": "{defaults.company}"
   },
   {
    "fieldname": "section_break_bedragen",

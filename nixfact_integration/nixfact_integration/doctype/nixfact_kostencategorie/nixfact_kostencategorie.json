@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "autoname": "field:categorie_naam",
+ "creation": "2026-03-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "categorie_naam",
+  "code",
+  "column_break_1",
+  "grootboek_nr",
+  "section_break_1",
+  "omschrijving"
+ ],
+ "fields": [
+  {
+   "fieldname": "categorie_naam",
+   "fieldtype": "Data",
+   "label": "Categorie",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "label": "Code",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "grootboek_nr",
+   "fieldtype": "Data",
+   "label": "Grootboekrekening"
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "omschrijving",
+   "fieldtype": "Small Text",
+   "label": "Omschrijving"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-03-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NixFact Integration",
+ "name": "NixFact Kostencategorie",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "categorie_naam",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 0
+}

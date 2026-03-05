@@ -20,6 +20,11 @@
   "offerte_volgnummer",
   "gebruik_jaar_offerte",
   "gebruik_maand_offerte",
+  "column_break_num2",
+  "inkoopfactuur_voorvoegsel",
+  "inkoopfactuur_volgnummer",
+  "gebruik_jaar_inkoopfactuur",
+  "gebruik_maand_inkoopfactuur",
   "facturatie_section",
   "betalingstermijn_facturen",
   "ubl_inschakelen",
@@ -156,6 +161,36 @@
    "fieldname": "gebruik_maand_offerte",
    "fieldtype": "Check",
    "label": "Gebruik maand in offertenummer"
+  },
+  {
+   "fieldname": "column_break_num2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "INK",
+   "fieldname": "inkoopfactuur_voorvoegsel",
+   "fieldtype": "Data",
+   "label": "Inkoopfactuur voorvoegsel",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "inkoopfactuur_volgnummer",
+   "fieldtype": "Int",
+   "label": "Inkoopfactuur volgnummer",
+   "reqd": 1
+  },
+  {
+   "default": 1,
+   "fieldname": "gebruik_jaar_inkoopfactuur",
+   "fieldtype": "Check",
+   "label": "Gebruik jaar in inkoopfactuurnr"
+  },
+  {
+   "default": 0,
+   "fieldname": "gebruik_maand_inkoopfactuur",
+   "fieldtype": "Check",
+   "label": "Gebruik maand in inkoopfactuurnr"
   },
   {
    "fieldname": "facturatie_section",

@@ -1,0 +1,36 @@
+<h2>Aanmaning - {{ doc.factuurnummer }}</h2>
+
+<p>Beste {{ doc.klant_naam or doc.klant }},</p>
+
+<p>Ondanks onze eerdere herinnering hebben wij nog geen betaling ontvangen voor onderstaande factuur. Wij verzoeken u dringend het openstaande bedrag zo spoedig mogelijk te voldoen.</p>
+
+<table style="border-collapse: collapse; width: 100%; max-width: 400px; margin: 20px 0;">
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Factuurnummer</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;"><strong>{{ doc.factuurnummer }}</strong></td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Oorspronkelijke vervaldatum</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">{{ doc.vervaldatum }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Herinnering verstuurd op</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">{{ doc.herinnering_datum }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; font-weight: bold; color: #c62828;">Openstaand bedrag</td>
+    <td style="padding: 8px; text-align: right; font-weight: bold; color: #c62828;">&euro; {{ "%.2f"|format(doc.openstaand_bedrag or doc.bedrag_incl_btw) }}</td>
+  </tr>
+</table>
+
+{% if betaallink %}
+<p>
+  <a href="{{ betaallink }}" style="display: inline-block; padding: 12px 24px; background-color: #c62828; color: white; text-decoration: none; border-radius: 4px;">
+    Nu betalen
+  </a>
+</p>
+{% endif %}
+
+<p>Indien betaling uitblijft, zijn wij genoodzaakt verdere stappen te ondernemen.</p>
+
+<p>Met vriendelijke groet,<br>{{ company_name }}</p>

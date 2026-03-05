@@ -8,6 +8,7 @@
   "column_break_hdr1",
   "klant",
   "klant_naam",
+  "company",
   "section_break_dates",
   "factuur_datum",
   "vervaldatum",
@@ -69,6 +70,13 @@
    "label": "Klantnaam",
    "fetch_from": "klant.customer_name",
    "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Bedrijf",
+   "options": "Company",
+   "default": "{defaults.company}"
   },
   {
    "fieldname": "section_break_dates",

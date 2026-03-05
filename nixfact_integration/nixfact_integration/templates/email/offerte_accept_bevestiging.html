@@ -1,0 +1,28 @@
+<h2>Bevestiging offerte {{ doc.offerte_nr }}</h2>
+
+<p>Beste {{ doc.klant }},</p>
+
+<p>Hierbij bevestigen wij de acceptatie van offerte <strong>{{ doc.offerte_nr }}</strong>.</p>
+
+<table style="border-collapse: collapse; width: 100%; max-width: 400px; margin: 20px 0;">
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Offertenummer</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;"><strong>{{ doc.offerte_nr }}</strong></td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Offertedatum</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">{{ doc.offerte_datum }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border-bottom: 1px solid #eee;">Bedrag excl. BTW</td>
+    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">&euro; {{ "%.2f"|format(doc.bedrag_excl) }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; font-weight: bold;">Bedrag incl. BTW</td>
+    <td style="padding: 8px; text-align: right; font-weight: bold;">&euro; {{ "%.2f"|format(doc.bedrag_incl) }}</td>
+  </tr>
+</table>
+
+<p>Wij nemen spoedig contact met u op voor de verdere afhandeling.</p>
+
+<p>Met vriendelijke groet,<br>{{ company_name }}</p>
