@@ -1,0 +1,18 @@
+[Unit]
+Description=NIXFact (Frappe/ERPNext) Web Server
+After=network.target mariadb.service redis.service
+Requires=mariadb.service redis.service
+
+[Service]
+Type=simple
+User=frappe
+Group=frappe
+WorkingDirectory=/home/frappe/frappe-bench
+ExecStart=/home/frappe/.local/bin/bench start
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

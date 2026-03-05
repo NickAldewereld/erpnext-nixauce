@@ -1,0 +1,8 @@
+[Unit]
+Description=NIXFact daily backup
+
+[Service]
+Type=oneshot
+User=frappe
+Group=frappe
+ExecStart=/opt/nixfact/scripts/backup.sh /opt/nixfact/backups

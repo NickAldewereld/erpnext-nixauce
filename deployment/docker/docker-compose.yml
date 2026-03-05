@@ -1,0 +1,97 @@
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-nixfact}
+      MYSQL_USER: ${DB_USER:-nixfact}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./mariadb.cnf:/etc/mysql/conf.d/frappe.cnf:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-cache:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_cache:/data
+
+  redis-queue:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_queue:/data
+
+  nixfact:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+      redis-queue:
+        condition: service_started
+    environment:
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-nixfact}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_CACHE=redis://redis-cache:6379
+      - REDIS_QUEUE=redis://redis-queue:6379
+      - SITE_NAME=${SITE_NAME:-nixfact.localhost}
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+      - logs_data:/home/frappe/frappe-bench/logs
+    ports:
+      - "${HTTP_PORT:-8080}:8000"
+
+  worker-short:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - nixfact
+    command: bench worker --queue short
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+
+  worker-long:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - nixfact
+    command: bench worker --queue long
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+
+  scheduler:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - nixfact
+    command: bench schedule
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+
+volumes:
+  mariadb_data:
+  redis_cache:
+  redis_queue:
+  sites_data:
+  logs_data:
