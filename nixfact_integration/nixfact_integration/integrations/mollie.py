@@ -1,33 +1,35 @@
 # Copyright (c) 2026, Nick Aldewereld
 # License: MIT
 
+"""Mollie payment integration for NIXFact invoices."""
+
+import re
+
 import frappe
 import requests
+from frappe import _
 from frappe.utils import nowdate, get_url
+
+# Mollie payment ID format: tr_ followed by alphanumeric
+PAYMENT_ID_PATTERN = re.compile(r"^tr_[a-zA-Z0-9]+$")
 
 
 class MollieIntegration:
-	"""Integration with Mollie payment API."""
+	"""Client for the Mollie v2 payments API."""
 
 	BASE_URL = "https://api.mollie.com/v2"
 
 	def __init__(self, api_key=None):
-		"""
-		Initialize with API key from settings or explicit key.
-
-		Args:
-		    api_key: Mollie API key. If None, reads from NixFactInstellingen.
-		"""
 		if api_key:
 			self.api_key = api_key
 		else:
 			settings = frappe.get_single("NixFact Instellingen")
 			if not settings.mollie_enabled:
-				frappe.throw("Mollie is niet ingeschakeld in de instellingen.")
+				frappe.throw(_("Mollie is niet ingeschakeld in de instellingen."))
 			self.api_key = settings.get_password("mollie_api_key")
 
 		if not self.api_key:
-			frappe.throw("Mollie API key is niet geconfigureerd.")
+			frappe.throw(_("Mollie API key is niet geconfigureerd."))
 
 	def _headers(self):
 		return {
@@ -36,20 +38,12 @@ class MollieIntegration:
 		}
 
 	def create_payment(self, factuur):
-		"""
-		Create a Mollie payment for an invoice.
-
-		Args:
-		    factuur: NixFact Factuur document name or Document
-
-		Returns:
-		    str: Checkout URL for the customer
-		"""
+		"""Create a Mollie payment and store the checkout URL on the invoice."""
 		if isinstance(factuur, str):
 			factuur = frappe.get_doc("NixFact Factuur", factuur)
 
 		if not factuur.bedrag_incl_btw or factuur.bedrag_incl_btw <= 0:
-			frappe.throw("Factuurbedrag moet groter zijn dan 0.")
+			frappe.throw(_("Factuurbedrag moet groter zijn dan 0."))
 
 		site_url = get_url()
 		response = requests.post(
@@ -74,15 +68,14 @@ class MollieIntegration:
 		if response.status_code not in (200, 201):
 			frappe.log_error(
 				title="Mollie payment aanmaken mislukt",
-				message=f"Status {response.status_code}: {response.text}",
+				message=f"Status {response.status_code}: {response.text[:500]}",
 			)
-			frappe.throw(f"Mollie API fout: {response.status_code}")
+			frappe.throw(_("Mollie API fout: {0}").format(response.status_code))
 
 		data = response.json()
 		payment_id = data["id"]
 		checkout_url = data["_links"]["checkout"]["href"]
 
-		# Store payment info on the invoice
 		factuur.mollie_payment_id = payment_id
 		factuur.mollie_payment_url = checkout_url
 		factuur.betaallink = checkout_url
@@ -92,15 +85,10 @@ class MollieIntegration:
 		return checkout_url
 
 	def get_payment(self, payment_id):
-		"""
-		Get payment status from Mollie.
+		"""Fetch payment status from Mollie. Returns the payment data dict."""
+		if not PAYMENT_ID_PATTERN.match(payment_id):
+			frappe.throw(_("Ongeldig Mollie payment ID."))
 
-		Args:
-		    payment_id: Mollie payment ID (e.g. tr_xxx)
-
-		Returns:
-		    dict: Payment data from Mollie
-		"""
 		response = requests.get(
 			f"{self.BASE_URL}/payments/{payment_id}",
 			headers=self._headers(),
@@ -110,26 +98,25 @@ class MollieIntegration:
 		if response.status_code != 200:
 			frappe.log_error(
 				title="Mollie payment ophalen mislukt",
-				message=f"Status {response.status_code}: {response.text}",
+				message=f"Status {response.status_code}: {response.text[:500]}",
 			)
-			frappe.throw(f"Mollie API fout: {response.status_code}")
+			frappe.throw(_("Mollie API fout: {0}").format(response.status_code))
 
 		return response.json()
 
 
 @frappe.whitelist(allow_guest=True)
 def webhook():
-	"""
-	Handle Mollie payment webhook callbacks.
+	"""Handle Mollie payment webhook. Guest-accessible as required by Mollie.
 
-	Mollie sends a POST with payment ID when status changes.
-	We verify the status and mark the invoice as paid if applicable.
+	Security: We never trust the webhook payload directly. The payment ID is
+	validated against a known pattern, then the actual status is verified by
+	calling the Mollie API before making any changes.
 	"""
 	payment_id = frappe.form_dict.get("id")
-	if not payment_id:
-		frappe.throw("Geen payment ID ontvangen.")
+	if not payment_id or not PAYMENT_ID_PATTERN.match(str(payment_id)):
+		return "OK"
 
-	# Find the invoice linked to this payment
 	factuur_name = frappe.db.get_value(
 		"NixFact Factuur",
 		{"mollie_payment_id": payment_id},
@@ -143,20 +130,18 @@ def webhook():
 		)
 		return "OK"
 
-	# Verify payment status with Mollie
+	# Always verify with Mollie — never trust the webhook body alone
 	try:
 		mollie = MollieIntegration()
 		payment_data = mollie.get_payment(payment_id)
 	except Exception:
 		frappe.log_error(
 			title="Mollie webhook: status ophalen mislukt",
-			message=f"Payment ID: {payment_id}",
+			message=frappe.get_traceback(),
 		)
 		return "OK"
 
-	status = payment_data.get("status")
-
-	if status == "paid":
+	if payment_data.get("status") == "paid":
 		factuur = frappe.get_doc("NixFact Factuur", factuur_name)
 		factuur.status = "Betaald"
 		factuur.betaald_bedrag = factuur.bedrag_incl_btw
