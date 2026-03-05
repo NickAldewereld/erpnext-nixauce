@@ -1,0 +1,411 @@
+{
+ "actions": [],
+ "creation": "2026-03-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "algemeen_section",
+  "standaard_verzendmethode",
+  "prijzen_inclusief_btw",
+  "column_break_alg1",
+  "resultaten_per_pagina",
+  "dagelijkse_email_notificatie",
+  "nummering_section",
+  "factuur_voorvoegsel",
+  "factuur_volgnummer",
+  "gebruik_jaar_factuur",
+  "gebruik_maand_factuur",
+  "column_break_num1",
+  "offerte_voorvoegsel",
+  "offerte_volgnummer",
+  "gebruik_jaar_offerte",
+  "gebruik_maand_offerte",
+  "facturatie_section",
+  "betalingstermijn_facturen",
+  "ubl_inschakelen",
+  "column_break_fac1",
+  "pdf_bijlagen_samenvoegen",
+  "herinneringen_section",
+  "betalingstermijn_herinnering",
+  "aantal_herinneringen",
+  "column_break_her1",
+  "betalingstermijn_aanmaning",
+  "negatief_openstaand_blokkeren",
+  "offertes_section",
+  "geldigheid_offertes",
+  "offerte_accept_notificatie_email",
+  "column_break_off1",
+  "auto_verstuur_accept_bevestiging",
+  "abonnementen_section",
+  "auto_factureren_abonnementen",
+  "abonnement_vooraf_dagen",
+  "column_break_abo1",
+  "factureren_tijdstip",
+  "samenvoegen_zelfde_datum",
+  "inkoop_section",
+  "inkoop_ontvangstbevestiging",
+  "column_break_ink1",
+  "inkoop_uitgaven_specificeren",
+  "btw_section",
+  "standaard_verkoop_btw",
+  "column_break_btw1",
+  "standaard_inkoop_btw",
+  "betaalmogelijkheden_section",
+  "mollie_enabled",
+  "mollie_api_key",
+  "column_break_bet1",
+  "sepa_incasso_enabled",
+  "bank_section",
+  "bankkoppeling_toestaan",
+  "automatisch_matchen",
+  "column_break_bank1",
+  "transacties_verwijderen"
+ ],
+ "fields": [
+  {
+   "fieldname": "algemeen_section",
+   "fieldtype": "Section Break",
+   "label": "Algemeen"
+  },
+  {
+   "default": "Email",
+   "fieldname": "standaard_verzendmethode",
+   "fieldtype": "Select",
+   "label": "Standaard verzendmethode",
+   "options": "Email\nPost"
+  },
+  {
+   "default": 1,
+   "fieldname": "prijzen_inclusief_btw",
+   "fieldtype": "Check",
+   "label": "Prijzen inclusief BTW"
+  },
+  {
+   "fieldname": "column_break_alg1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "100",
+   "fieldname": "resultaten_per_pagina",
+   "fieldtype": "Int",
+   "label": "Resultaten per pagina"
+  },
+  {
+   "default": 0,
+   "fieldname": "dagelijkse_email_notificatie",
+   "fieldtype": "Check",
+   "label": "Dagelijkse e-mail notificatie"
+  },
+  {
+   "fieldname": "nummering_section",
+   "fieldtype": "Section Break",
+   "label": "Nummering"
+  },
+  {
+   "default": "FAC",
+   "fieldname": "factuur_voorvoegsel",
+   "fieldtype": "Data",
+   "label": "Factuur voorvoegsel",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "factuur_volgnummer",
+   "fieldtype": "Int",
+   "label": "Factuur volgnummer",
+   "reqd": 1
+  },
+  {
+   "default": 1,
+   "fieldname": "gebruik_jaar_factuur",
+   "fieldtype": "Check",
+   "label": "Gebruik jaar in factuurnummer"
+  },
+  {
+   "default": 0,
+   "fieldname": "gebruik_maand_factuur",
+   "fieldtype": "Check",
+   "label": "Gebruik maand in factuurnummer"
+  },
+  {
+   "fieldname": "column_break_num1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "OFF",
+   "fieldname": "offerte_voorvoegsel",
+   "fieldtype": "Data",
+   "label": "Offerte voorvoegsel",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "offerte_volgnummer",
+   "fieldtype": "Int",
+   "label": "Offerte volgnummer",
+   "reqd": 1
+  },
+  {
+   "default": 1,
+   "fieldname": "gebruik_jaar_offerte",
+   "fieldtype": "Check",
+   "label": "Gebruik jaar in offertenummer"
+  },
+  {
+   "default": 0,
+   "fieldname": "gebruik_maand_offerte",
+   "fieldtype": "Check",
+   "label": "Gebruik maand in offertenummer"
+  },
+  {
+   "fieldname": "facturatie_section",
+   "fieldtype": "Section Break",
+   "label": "Facturatie"
+  },
+  {
+   "default": "14",
+   "fieldname": "betalingstermijn_facturen",
+   "fieldtype": "Int",
+   "label": "Betalingstermijn facturen (dagen)",
+   "reqd": 1
+  },
+  {
+   "default": "Geen UBL",
+   "fieldname": "ubl_inschakelen",
+   "fieldtype": "Select",
+   "label": "UBL e-facturatie",
+   "options": "Geen UBL\nAlleen UBL XML\nPDF + UBL bijlage"
+  },
+  {
+   "fieldname": "column_break_fac1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "pdf_bijlagen_samenvoegen",
+   "fieldtype": "Check",
+   "label": "PDF bijlagen samenvoegen"
+  },
+  {
+   "fieldname": "herinneringen_section",
+   "fieldtype": "Section Break",
+   "label": "Herinneringen"
+  },
+  {
+   "default": "7",
+   "fieldname": "betalingstermijn_herinnering",
+   "fieldtype": "Int",
+   "label": "Dagen na vervaldatum voor herinnering",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "aantal_herinneringen",
+   "fieldtype": "Int",
+   "label": "Aantal herinneringen",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_her1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "7",
+   "fieldname": "betalingstermijn_aanmaning",
+   "fieldtype": "Int",
+   "label": "Dagen na herinnering voor aanmaning",
+   "reqd": 1
+  },
+  {
+   "default": 0,
+   "fieldname": "negatief_openstaand_blokkeren",
+   "fieldtype": "Check",
+   "label": "Negatief openstaand bedrag blokkeren"
+  },
+  {
+   "fieldname": "offertes_section",
+   "fieldtype": "Section Break",
+   "label": "Offertes"
+  },
+  {
+   "default": "30",
+   "fieldname": "geldigheid_offertes",
+   "fieldtype": "Int",
+   "label": "Geldigheid offertes (dagen)",
+   "reqd": 1
+  },
+  {
+   "default": 0,
+   "fieldname": "offerte_accept_notificatie_email",
+   "fieldtype": "Check",
+   "label": "E-mail notificatie bij acceptatie"
+  },
+  {
+   "fieldname": "column_break_off1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "auto_verstuur_accept_bevestiging",
+   "fieldtype": "Check",
+   "label": "Automatisch acceptatiebevestiging versturen"
+  },
+  {
+   "fieldname": "abonnementen_section",
+   "fieldtype": "Section Break",
+   "label": "Abonnementen"
+  },
+  {
+   "default": 1,
+   "fieldname": "auto_factureren_abonnementen",
+   "fieldtype": "Check",
+   "label": "Automatisch factureren"
+  },
+  {
+   "default": "1",
+   "fieldname": "abonnement_vooraf_dagen",
+   "fieldtype": "Int",
+   "label": "Dagen vooraf factureren"
+  },
+  {
+   "fieldname": "column_break_abo1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "09:00",
+   "fieldname": "factureren_tijdstip",
+   "fieldtype": "Data",
+   "label": "Factureren tijdstip"
+  },
+  {
+   "default": 0,
+   "fieldname": "samenvoegen_zelfde_datum",
+   "fieldtype": "Check",
+   "label": "Facturen samenvoegen bij zelfde datum"
+  },
+  {
+   "fieldname": "inkoop_section",
+   "fieldtype": "Section Break",
+   "label": "Inkoop"
+  },
+  {
+   "default": 0,
+   "fieldname": "inkoop_ontvangstbevestiging",
+   "fieldtype": "Check",
+   "label": "Ontvangstbevestiging versturen"
+  },
+  {
+   "fieldname": "column_break_ink1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "inkoop_uitgaven_specificeren",
+   "fieldtype": "Check",
+   "label": "Uitgaven specificeren"
+  },
+  {
+   "fieldname": "btw_section",
+   "fieldtype": "Section Break",
+   "label": "BTW"
+  },
+  {
+   "default": "21",
+   "fieldname": "standaard_verkoop_btw",
+   "fieldtype": "Percent",
+   "label": "Standaard verkoop BTW (%)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_btw1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "21",
+   "fieldname": "standaard_inkoop_btw",
+   "fieldtype": "Percent",
+   "label": "Standaard inkoop BTW (%)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "betaalmogelijkheden_section",
+   "fieldtype": "Section Break",
+   "label": "Betaalmogelijkheden"
+  },
+  {
+   "default": 0,
+   "fieldname": "mollie_enabled",
+   "fieldtype": "Check",
+   "label": "Mollie inschakelen"
+  },
+  {
+   "depends_on": "eval:doc.mollie_enabled",
+   "fieldname": "mollie_api_key",
+   "fieldtype": "Password",
+   "label": "Mollie API Key"
+  },
+  {
+   "fieldname": "column_break_bet1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "sepa_incasso_enabled",
+   "fieldtype": "Check",
+   "label": "SEPA incasso inschakelen"
+  },
+  {
+   "fieldname": "bank_section",
+   "fieldtype": "Section Break",
+   "label": "Bank"
+  },
+  {
+   "default": 1,
+   "fieldname": "bankkoppeling_toestaan",
+   "fieldtype": "Check",
+   "label": "Bankkoppeling toestaan"
+  },
+  {
+   "default": 1,
+   "fieldname": "automatisch_matchen",
+   "fieldtype": "Check",
+   "label": "Automatisch matchen"
+  },
+  {
+   "fieldname": "column_break_bank1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "transacties_verwijderen",
+   "fieldtype": "Check",
+   "label": "Transacties verwijderen toestaan"
+  }
+ ],
+ "hide_toolbar": 1,
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-03-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NixFact Integration",
+ "name": "NixFact Instellingen",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

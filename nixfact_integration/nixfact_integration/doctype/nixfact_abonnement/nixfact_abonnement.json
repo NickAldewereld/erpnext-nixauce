@@ -1,0 +1,178 @@
+{
+ "actions": [],
+ "autoname": "format:ABO-{####}",
+ "creation": "2026-03-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "klant",
+  "klant_naam",
+  "column_break_hdr1",
+  "omschrijving",
+  "status",
+  "section_break_bedragen",
+  "bedrag_excl_btw",
+  "btw_percentage",
+  "column_break_bedragen1",
+  "bedrag_incl_btw",
+  "section_break_planning",
+  "frequentie",
+  "startdatum",
+  "einddatum",
+  "column_break_planning1",
+  "volgende_factuur_datum",
+  "laatste_factuur_datum",
+  "section_break_extra",
+  "opmerkingen"
+ ],
+ "fields": [
+  {
+   "fieldname": "klant",
+   "fieldtype": "Link",
+   "label": "Klant",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "klant_naam",
+   "fieldtype": "Data",
+   "label": "Klantnaam",
+   "fetch_from": "klant.customer_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hdr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "omschrijving",
+   "fieldtype": "Data",
+   "label": "Omschrijving",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "Actief",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Actief\nGepauzeerd\nBeeindigd",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "section_break_bedragen",
+   "fieldtype": "Section Break",
+   "label": "Bedragen"
+  },
+  {
+   "fieldname": "bedrag_excl_btw",
+   "fieldtype": "Currency",
+   "label": "Bedrag Excl. BTW",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "21",
+   "fieldname": "btw_percentage",
+   "fieldtype": "Percent",
+   "label": "BTW %"
+  },
+  {
+   "fieldname": "column_break_bedragen1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bedrag_incl_btw",
+   "fieldtype": "Currency",
+   "label": "Bedrag Incl. BTW",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_planning",
+   "fieldtype": "Section Break",
+   "label": "Planning"
+  },
+  {
+   "default": "Maandelijks",
+   "fieldname": "frequentie",
+   "fieldtype": "Select",
+   "label": "Frequentie",
+   "options": "Maandelijks\nKwartaal\nHalfjaarlijks\nJaarlijks",
+   "reqd": 1
+  },
+  {
+   "fieldname": "startdatum",
+   "fieldtype": "Date",
+   "label": "Startdatum",
+   "reqd": 1
+  },
+  {
+   "fieldname": "einddatum",
+   "fieldtype": "Date",
+   "label": "Einddatum"
+  },
+  {
+   "fieldname": "column_break_planning1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "volgende_factuur_datum",
+   "fieldtype": "Date",
+   "label": "Volgende factuurdatum",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "laatste_factuur_datum",
+   "fieldtype": "Date",
+   "label": "Laatste factuurdatum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_extra",
+   "fieldtype": "Section Break",
+   "label": "Extra",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "opmerkingen",
+   "fieldtype": "Small Text",
+   "label": "Opmerkingen"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-03-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NixFact Integration",
+ "name": "NixFact Abonnement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  }
+ ],
+ "search_fields": "klant,klant_naam,omschrijving,status",
+ "sort_field": "volgende_factuur_datum",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

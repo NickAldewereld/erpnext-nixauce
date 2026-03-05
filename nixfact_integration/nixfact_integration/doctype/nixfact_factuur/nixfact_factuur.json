@@ -1,0 +1,271 @@
+{
+ "actions": [],
+ "creation": "2026-03-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "factuurnummer",
+  "column_break_hdr1",
+  "klant",
+  "klant_naam",
+  "section_break_dates",
+  "factuur_datum",
+  "vervaldatum",
+  "column_break_dates1",
+  "status",
+  "verzendmethode",
+  "section_break_bedragen",
+  "bedrag_excl_btw",
+  "btw_percentage",
+  "btw_bedrag",
+  "column_break_bedragen1",
+  "bedrag_incl_btw",
+  "betaald_bedrag",
+  "openstaand_bedrag",
+  "section_break_betaling",
+  "betaaldatum",
+  "betaallink",
+  "column_break_betaling1",
+  "referentie",
+  "abonnement",
+  "section_break_herinnering",
+  "herinnering_verstuurd",
+  "herinnering_datum",
+  "column_break_herinnering1",
+  "aanmaning_verstuurd",
+  "aanmaning_datum",
+  "section_break_extra",
+  "opmerkingen"
+ ],
+ "fields": [
+  {
+   "fieldname": "factuurnummer",
+   "fieldtype": "Data",
+   "label": "Factuurnummer",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_hdr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "klant",
+   "fieldtype": "Link",
+   "label": "Klant",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "klant_naam",
+   "fieldtype": "Data",
+   "label": "Klantnaam",
+   "fetch_from": "klant.customer_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_dates",
+   "fieldtype": "Section Break",
+   "label": "Datums"
+  },
+  {
+   "fieldname": "factuur_datum",
+   "fieldtype": "Date",
+   "label": "Factuurdatum",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "vervaldatum",
+   "fieldtype": "Date",
+   "label": "Vervaldatum",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_dates1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Concept",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Concept\nVerstuurd\nBetaald\nHerinnering verstuurd\nAanmaning verstuurd\nOninbaar",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "Email",
+   "fieldname": "verzendmethode",
+   "fieldtype": "Select",
+   "label": "Verzendmethode",
+   "options": "Email\nPost"
+  },
+  {
+   "fieldname": "section_break_bedragen",
+   "fieldtype": "Section Break",
+   "label": "Bedragen"
+  },
+  {
+   "fieldname": "bedrag_excl_btw",
+   "fieldtype": "Currency",
+   "label": "Bedrag Excl. BTW",
+   "reqd": 1
+  },
+  {
+   "default": "21",
+   "fieldname": "btw_percentage",
+   "fieldtype": "Percent",
+   "label": "BTW %"
+  },
+  {
+   "fieldname": "btw_bedrag",
+   "fieldtype": "Currency",
+   "label": "BTW Bedrag",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_bedragen1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bedrag_incl_btw",
+   "fieldtype": "Currency",
+   "label": "Bedrag Incl. BTW",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "betaald_bedrag",
+   "fieldtype": "Currency",
+   "label": "Betaald Bedrag"
+  },
+  {
+   "fieldname": "openstaand_bedrag",
+   "fieldtype": "Currency",
+   "label": "Openstaand Bedrag",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_betaling",
+   "fieldtype": "Section Break",
+   "label": "Betaling"
+  },
+  {
+   "fieldname": "betaaldatum",
+   "fieldtype": "Date",
+   "label": "Betaaldatum"
+  },
+  {
+   "fieldname": "betaallink",
+   "fieldtype": "Data",
+   "label": "Betaallink",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_betaling1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "referentie",
+   "fieldtype": "Data",
+   "label": "Referentie"
+  },
+  {
+   "fieldname": "abonnement",
+   "fieldtype": "Link",
+   "label": "Abonnement",
+   "options": "NixFact Abonnement"
+  },
+  {
+   "fieldname": "section_break_herinnering",
+   "fieldtype": "Section Break",
+   "label": "Herinneringen",
+   "collapsible": 1
+  },
+  {
+   "default": 0,
+   "fieldname": "herinnering_verstuurd",
+   "fieldtype": "Check",
+   "label": "Herinnering verstuurd"
+  },
+  {
+   "fieldname": "herinnering_datum",
+   "fieldtype": "Date",
+   "label": "Herinnering datum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_herinnering1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": 0,
+   "fieldname": "aanmaning_verstuurd",
+   "fieldtype": "Check",
+   "label": "Aanmaning verstuurd"
+  },
+  {
+   "fieldname": "aanmaning_datum",
+   "fieldtype": "Date",
+   "label": "Aanmaning datum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_extra",
+   "fieldtype": "Section Break",
+   "label": "Extra",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "opmerkingen",
+   "fieldtype": "Small Text",
+   "label": "Opmerkingen"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-03-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NixFact Integration",
+ "name": "NixFact Factuur",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "klant,klant_naam,status",
+ "sort_field": "factuur_datum",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

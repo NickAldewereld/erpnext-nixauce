@@ -1,0 +1,17 @@
+[project]
+name = "nixfact_integration"
+authors = [
+    { name = "Nick Aldewereld", email = "nick@nixpay.nl" }
+]
+description = "WeFact-inspired invoicing system for ERPNext"
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
+dynamic = ["version"]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.frappe-dependencies]
+frappe = ">=17.0.0-dev,<18.0.0"
