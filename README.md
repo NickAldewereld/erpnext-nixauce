@@ -1,5 +1,10 @@
 # NIXFact
 
+[![CI](https://github.com/NickAldewereld/erpnext-nixauce/actions/workflows/ci.yml/badge.svg)](https://github.com/NickAldewereld/erpnext-nixauce/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Frappe](https://img.shields.io/badge/Frappe-v17-blue)](https://frappeframework.com)
+[![ERPNext](https://img.shields.io/badge/ERPNext-v17-green)](https://erpnext.com)
+
 Open-source WeFact alternative built on ERPNext.
 
 ## Features
