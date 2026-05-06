@@ -1,0 +1,132 @@
+{# www/offerte.html — public offerte portal #}
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Offerte {{ offerte.offerte_nr }}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 2rem auto; padding: 1rem; color: #1a1a1a; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+        .meta { color: #666; }
+        .bedrag { font-size: 2rem; font-weight: 600; margin: 1rem 0 0.25rem; }
+        .actions { margin-top: 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        button { padding: 0.75rem 1.5rem; border: 0; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+        .accept { background: #0a7d3e; color: white; }
+        .reject { background: #f1f1f1; color: #1a1a1a; }
+        .sigwrap { margin-top: 1.5rem; border: 2px dashed #ccc; border-radius: 0.5rem; padding: 0.5rem; }
+        canvas { display: block; width: 100%; height: 200px; touch-action: none; background: #fafafa; border-radius: 0.25rem; }
+        .clear { background: transparent; color: #666; padding: 0.25rem 0.75rem; font-size: 0.85rem; }
+        .status-pill { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; }
+        .status-Geaccepteerd { background: #d4f4dd; color: #0a7d3e; }
+        .status-Geweigerd { background: #f4d4d4; color: #b32424; }
+        input[type=email] { width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #ccc; border-radius: 0.25rem; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>Offerte {{ offerte.offerte_nr }}</h1>
+    <p class="meta">
+        Voor {{ klant_naam }} — {{ frappe.format(offerte.offerte_datum, {"fieldtype": "Date"}) }}
+        {% if not can_sign %}
+            <span class="status-pill status-{{ offerte.status }}">{{ offerte.status }}</span>
+        {% endif %}
+    </p>
+
+    {% if offerte.referentie %}<p><strong>{{ offerte.referentie }}</strong></p>{% endif %}
+    <p class="bedrag">{{ frappe.format(offerte.bedrag_incl, {"fieldtype": "Currency"}) }}</p>
+    <p class="meta">incl. BTW</p>
+
+    {% if can_sign %}
+    <form id="accept-form" onsubmit="return submitAccept(event)">
+        <label>Uw e-mailadres
+            <input type="email" name="email" required>
+        </label>
+        <div class="sigwrap">
+            <p class="meta" style="margin:0 0 0.5rem">Onderteken hieronder met uw vinger of muis:</p>
+            <canvas id="sig"></canvas>
+            <button type="button" class="clear" onclick="clearSig()">wis handtekening</button>
+        </div>
+        <div class="actions">
+            <button type="submit" class="accept">Akkoord &amp; ondertekenen</button>
+            <button type="button" class="reject" onclick="reject()">Afwijzen</button>
+        </div>
+    </form>
+
+    <script>
+    const canvas = document.getElementById('sig');
+    const ctx = canvas.getContext('2d');
+    let drawing = false, hasInk = false;
+
+    function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#1a1a1a';
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const t = e.touches ? e.touches[0] : e;
+        return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+    }
+    function start(e) { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+    function move(e) { if (!drawing) return; e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); hasInk = true; }
+    function end() { drawing = false; }
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, {passive: false});
+    canvas.addEventListener('touchmove', move, {passive: false});
+    canvas.addEventListener('touchend', end);
+
+    function clearSig() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hasInk = false;
+    }
+
+    async function submitAccept(e) {
+        e.preventDefault();
+        if (!hasInk) { alert('Zet eerst uw handtekening.'); return false; }
+        const email = e.target.email.value.trim();
+        const sig = canvas.toDataURL('image/png');
+        const r = await fetch('/api/method/nixfact_integration.api.offerte_portal.accepteer_offerte', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({token: '{{ token }}', email, signature_data_url: sig}),
+        });
+        if (r.ok) {
+            const data = await r.json();
+            window.location = (data.message && data.message.redirect) || '/offerte-bedankt';
+        } else {
+            alert('Ondertekenen mislukt. Probeer het opnieuw of neem contact op.');
+        }
+        return false;
+    }
+
+    async function reject() {
+        const reden = prompt('Reden voor afwijzing (optioneel):') || '';
+        const r = await fetch('/api/method/nixfact_integration.api.offerte_portal.weiger_offerte', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({token: '{{ token }}', reden}),
+        });
+        if (r.ok) window.location.reload();
+    }
+    </script>
+    {% else %}
+    <div class="meta" style="padding:1rem;background:#f9f9f9;border-radius:0.5rem">
+        Deze offerte heeft de status <strong>{{ offerte.status }}</strong>.
+        {% if offerte.status == "Geaccepteerd" %}
+            <p>Geaccepteerd op {{ frappe.format(offerte.ondertekend_op, {"fieldtype": "Datetime"}) }} door {{ offerte.ondertekend_door_email }}.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</body>
+</html>
