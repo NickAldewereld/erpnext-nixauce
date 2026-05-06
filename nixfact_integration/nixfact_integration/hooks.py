@@ -7,7 +7,7 @@ app_title = "NixFact"
 app_publisher = "Nick Aldewereld"
 app_description = "WeFact-inspired invoicing system for ERPNext"
 app_email = "nick@nixpay.nl"
-app_license = "MIT"
+app_license = "AGPL-3.0-or-later"
 
 # App includes (uncomment when assets exist)
 # app_include_css = "/assets/nixfact_integration/css/nixfact.css"
