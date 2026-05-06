@@ -45,6 +45,29 @@ class TestAcceptedImmutability(unittest.TestCase):
         doc.get_doc_before_save = MagicMock(return_value=old)
         return doc
 
+    def _make_doc_tampered(self, *, field_to_change, new_value):
+        """Build a doc + old_doc pair where exactly `field_to_change` differs."""
+        baseline = {
+            "handtekening": "data:image/png;base64,ORIGINAL",
+            "ondertekend_op": "2026-05-06 14:00:00",
+            "ondertekend_door_email": "klant@example.com",
+            "ondertekend_ip": "1.2.3.4",
+            "ondertekend_user_agent": "Mozilla/5.0",
+        }
+        doc = MagicMock(spec=NixFactOfferte)
+        doc.is_new = MagicMock(return_value=False)
+        for field, value in baseline.items():
+            setattr(doc, field, value)
+        # Apply the tamper on the doc side.
+        setattr(doc, field_to_change, new_value)
+
+        old = MagicMock()
+        for field, value in baseline.items():
+            setattr(old, field, value)
+        # Old must always carry ondertekend_op for the guard to engage.
+        doc.get_doc_before_save = MagicMock(return_value=old)
+        return doc
+
     def test_signature_change_after_accept_blocked(self):
         doc = self._make_doc(current_sig="tampered", old_sig="original")
         with self.assertRaises(Exception):
@@ -52,7 +75,24 @@ class TestAcceptedImmutability(unittest.TestCase):
 
     def test_unchanged_audit_passes(self):
         doc = self._make_doc(current_sig="original", old_sig="original")
-        NixFactOfferte._guard_immutable_after_accept(doc)  # no raise
+        try:
+            NixFactOfferte._guard_immutable_after_accept(doc)
+        except Exception as e:  # noqa: BLE001
+            self.fail(f"Guard raised unexpectedly on unchanged audit: {e}")
+
+    def test_each_locked_field_blocks_tampering(self):
+        cases = [
+            ("handtekening", "data:image/png;base64,TAMPERED"),
+            ("ondertekend_op", "2099-01-01 00:00:00"),
+            ("ondertekend_door_email", "attacker@example.com"),
+            ("ondertekend_ip", "9.9.9.9"),
+            ("ondertekend_user_agent", "TamperedAgent/1.0"),
+        ]
+        for field, new_value in cases:
+            with self.subTest(field=field):
+                doc = self._make_doc_tampered(field_to_change=field, new_value=new_value)
+                with self.assertRaises(Exception):
+                    NixFactOfferte._guard_immutable_after_accept(doc)
 
     def test_unsigned_offerte_is_editable(self):
         doc = MagicMock(spec=NixFactOfferte)
