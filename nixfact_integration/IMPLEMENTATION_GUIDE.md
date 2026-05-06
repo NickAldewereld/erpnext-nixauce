@@ -567,16 +567,18 @@ bench --site nixfact.eu watch
 - [ ] Peppol ready
 
 **SPRINT 6: Offerte Portal & Ondertekening**
-- [ ] Schema-uitbreiding `NixFact Offerte` (accept_token, signature, audit-velden)
-- [ ] Token-generatie in `before_insert`
-- [ ] Publieke portal-pagina `www/offerte.html` (token-gebaseerde toegang)
-- [ ] Signature canvas (touch + desktop)
-- [ ] Accept/Weiger API endpoints (allow_guest=True)
-- [ ] Audit trail logging (email, IP, user-agent, timestamp)
+- [x] Schema-uitbreiding `NixFact Offerte` (accept_token, signature, audit-velden)
+- [x] Token-generatie in `before_insert`
+- [x] Publieke portal-pagina `www/offerte.html` (token-gebaseerde toegang)
+- [x] Signature canvas (touch + desktop)
+- [x] Accept/Weiger API endpoints (allow_guest=True)
+- [x] Audit trail logging (email, IP, user-agent, timestamp)
 - [ ] Audit PDF generatie met handtekening + footer
-- [ ] Bevestigingsmails klant + eigenaar
+- [x] Bevestigingsmails klant + eigenaar
 - [ ] Settings-velden in `NixFactInstellingen`
-- [ ] Tests: token-flow, accept-flow, weiger-flow, immutability na ondertekening
+- [x] Tests: token-flow, accept-flow, weiger-flow, immutability na ondertekening
+
+> _Sprint 6 MVP shipped: token-portal, signature canvas, accept/reject API, audit trail, basic confirmation mails. Audit-PDF and per-tenant settings-velden deferred to Sprint 6.5._
 
 ---
 
