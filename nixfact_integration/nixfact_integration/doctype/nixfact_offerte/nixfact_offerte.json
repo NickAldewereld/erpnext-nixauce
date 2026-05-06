@@ -15,7 +15,17 @@
   "bedrag_incl",
   "column_break_2",
   "referentie",
-  "status"
+  "status",
+  "section_break_ondertekening",
+  "accept_token",
+  "portal_verstuurd_op",
+  "column_break_3",
+  "ondertekend_op",
+  "ondertekend_door_email",
+  "ondertekend_ip",
+  "ondertekend_user_agent",
+  "handtekening",
+  "weigering_reden"
  ],
  "fields": [
   {
@@ -82,11 +92,73 @@
    "label": "Status",
    "options": "Concept\nVerstuurd\nGeaccepteerd\nGeweigerd\nVerlopen\nFactuur aangemaakt",
    "reqd": 1
+  },
+  {
+   "fieldname": "section_break_ondertekening",
+   "fieldtype": "Section Break",
+   "label": "Ondertekening"
+  },
+  {
+   "fieldname": "accept_token",
+   "fieldtype": "Data",
+   "label": "Accept Token",
+   "read_only": 1,
+   "hidden": 1,
+   "unique": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "portal_verstuurd_op",
+   "fieldtype": "Datetime",
+   "label": "Portal-link verstuurd op",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ondertekend_op",
+   "fieldtype": "Datetime",
+   "label": "Ondertekend op",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ondertekend_door_email",
+   "fieldtype": "Data",
+   "label": "Ondertekend door (email)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ondertekend_ip",
+   "fieldtype": "Data",
+   "label": "IP-adres",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ondertekend_user_agent",
+   "fieldtype": "Small Text",
+   "label": "User Agent",
+   "read_only": 1
+  },
+  {
+   "fieldname": "handtekening",
+   "fieldtype": "Long Text",
+   "label": "Handtekening (PNG data URL)",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "weigering_reden",
+   "fieldtype": "Small Text",
+   "label": "Weigering reden",
+   "read_only": 1,
+   "depends_on": "eval:doc.status=='Geweigerd'"
   }
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2024-01-30 17:30:00.000000",
+ "modified": "2026-05-06 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "NixFact Integration",
  "name": "NixFact Offerte",
