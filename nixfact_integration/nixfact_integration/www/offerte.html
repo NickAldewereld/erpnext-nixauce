@@ -62,6 +62,7 @@
         const rect = canvas.getBoundingClientRect();
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);  // reset before re-scaling on resize
         ctx.scale(dpr, dpr);
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
