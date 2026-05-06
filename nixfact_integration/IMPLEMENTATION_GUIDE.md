@@ -21,6 +21,7 @@ Building a self-hosted, WeFact-inspired invoicing system on ERPNext with:
 ✅ UBL 2.1 / Peppol e-invoicing  
 ✅ Statistics & dashboards (5 tabs)  
 ✅ Payment integrations (Mollie, SEPA)  
+✅ Offerte portal met digitale ondertekening (canvas signature, IP/email/UA audit trail)  
 
 ---
 
@@ -303,6 +304,168 @@ def generate_ubl_invoice(factuur):
 
 ---
 
+### **SPRINT 6: Offerte Portal & Digitale Ondertekening (Week 7)**
+
+**Why?** WeFact-style accept-flow: klant krijgt mail met PDF + link, opent publieke offerte-pagina,
+zet handtekening met vinger (touch) of muis (desktop), en accepteert. We loggen email + IP + user-agent + timestamp.
+
+**No DocuSeal needed** — Frappe heeft een native `Signature` fieldtype (HTML5 canvas, werkt op
+touch en desktop). Audit trail wordt opgeslagen op de offerte zelf.
+
+#### Schema-wijzigingen `nixfact_offerte.json`
+
+Nieuwe sectie "Ondertekening" met velden:
+```
+- accept_token (Data, hidden, unique, read_only)        # 32-char URL-safe token
+- portal_url (Data, read_only, depends_on: accept_token) # gegenereerd uit token
+- portal_verstuurd_op (Datetime, read_only)
+- handtekening (Signature, depends_on: status == "Geaccepteerd")
+- ondertekend_op (Datetime, read_only)
+- ondertekend_door_email (Data, read_only)
+- ondertekend_ip (Data, read_only)
+- ondertekend_user_agent (Small Text, read_only)
+- weigering_reden (Small Text, depends_on: status == "Geweigerd")
+- accept_pdf (Attach, read_only)                         # PDF met handtekening + audit footer
+```
+
+Status `Geaccepteerd` blijft uit de bestaande Select; nieuw: `accept_pdf` is de juridisch
+ondertekende versie (PDF met signature image + audit footer onderaan).
+
+#### Token-generatie en status-transities — `nixfact_offerte.py`
+
+```python
+import secrets
+from frappe.model.document import Document
+
+class NixFactOfferte(Document):
+    def before_insert(self):
+        if not self.accept_token:
+            self.accept_token = secrets.token_urlsafe(24)
+
+    def before_save(self):
+        # Lock signature fields zodra ondertekend (immutable audit trail)
+        if self.ondertekend_op and self.has_value_changed("handtekening"):
+            frappe.throw(_("Ondertekende offerte kan niet meer gewijzigd worden"))
+```
+
+#### Publieke portal-pagina — `www/offerte.py` + `www/offerte.html`
+
+Frappe portal route: `https://nixfact.eu/offerte?token=<accept_token>`
+
+```python
+# www/offerte.py
+import frappe
+
+no_cache = 1
+
+def get_context(context):
+    token = frappe.form_dict.get("token")
+    if not token:
+        frappe.throw(_("Ongeldige link"), frappe.PermissionError)
+
+    offerte = frappe.db.get_value(
+        "NixFact Offerte",
+        {"accept_token": token},
+        ["name", "klant", "offerte_nr", "bedrag_incl", "status", "offerte_datum"],
+        as_dict=True
+    )
+    if not offerte:
+        frappe.throw(_("Offerte niet gevonden"), frappe.DoesNotExistError)
+
+    context.offerte = offerte
+    context.no_cache = 1
+    context.show_sidebar = False
+```
+
+Template (`www/offerte.html`) toont: bedrijfsgegevens, regel-items, totaal, PDF-download,
+en (als status == Verstuurd) een signature-canvas + email-veld + accept/weiger knoppen.
+
+#### Accept/Weiger API — `api/offerte_portal.py`
+
+```python
+import frappe
+from frappe import _
+
+@frappe.whitelist(allow_guest=True)
+def accepteer_offerte(token, email, signature_data_url):
+    """
+    signature_data_url: 'data:image/png;base64,...' van canvas.toDataURL()
+    """
+    offerte = _get_offerte_by_token(token)
+
+    if offerte.status != "Verstuurd":
+        frappe.throw(_("Deze offerte kan niet meer geaccepteerd worden"))
+
+    # Audit trail
+    offerte.handtekening = signature_data_url
+    offerte.ondertekend_op = frappe.utils.now_datetime()
+    offerte.ondertekend_door_email = email
+    offerte.ondertekend_ip = frappe.local.request_ip
+    offerte.ondertekend_user_agent = frappe.get_request_header("User-Agent", "")[:500]
+    offerte.status = "Geaccepteerd"
+    offerte.save(ignore_permissions=True)
+
+    # Genereer audit-PDF en bevestigingsmails (zie helpers hieronder)
+    _genereer_accept_pdf(offerte)
+    _verstuur_bevestiging_klant(offerte)
+    _verstuur_notificatie_eigenaar(offerte)
+
+    return {"status": "ok", "redirect": f"/offerte/bedankt?token={token}"}
+
+@frappe.whitelist(allow_guest=True)
+def weiger_offerte(token, reden=""):
+    offerte = _get_offerte_by_token(token)
+    offerte.status = "Geweigerd"
+    offerte.weigering_reden = reden
+    offerte.save(ignore_permissions=True)
+    return {"status": "ok"}
+
+def _get_offerte_by_token(token):
+    name = frappe.db.get_value("NixFact Offerte", {"accept_token": token}, "name")
+    if not name:
+        frappe.throw(_("Offerte niet gevonden"), frappe.DoesNotExistError)
+    return frappe.get_doc("NixFact Offerte", name)
+```
+
+#### Frontend — signature canvas
+
+Frappe's ingebouwde `Signature` fieldtype gebruikt al een canvas met touch+mouse support.
+Voor de publieke portal-pagina laden we dezelfde widget via `frappe.ui.form.ControlSignature`,
+of een minimale custom canvas (~30 regels JS) als de control niet beschikbaar is voor guests.
+
+#### Settings-uitbreiding — `NixFactInstellingen`
+
+Toe te voegen aan Sprint 0 settings (sectie "Offertes"):
+```
+- offerte_portal_handtekening_verplicht (Checkbox, default ✓)
+- offerte_portal_email_verplicht (Checkbox, default ✓)
+- offerte_accept_template_klant (Link → Email Template)
+- offerte_accept_template_eigenaar (Link → Email Template)
+- offerte_pdf_audit_footer_text (Small Text, default
+  "Ondertekend op {datum} door {email} vanaf IP {ip}")
+```
+
+#### Audit PDF
+
+`utils/offerte_pdf.py` genereert een PDF met de offerte + een footer-pagina met:
+- Handtekening-image
+- Ondertekend door (email)
+- IP-adres
+- User agent
+- Timestamp (UTC + lokaal)
+- SHA-256 hash van de offerte-inhoud op moment van ondertekenen
+
+Deze PDF wordt opgeslagen in `accept_pdf` en als bijlage meegestuurd in de bevestigingsmails.
+
+#### Juridische context (NL/EU)
+
+Onder eIDAS valt dit als "elektronische handtekening" (basis-niveau, art. 25 eIDAS) — geldig
+voor offertes en standaard B2B-overeenkomsten. Voor zwaardere documenten (notariële akten,
+arbeidscontracten) zou je later een gekwalificeerde handtekening (QES) via DocuSeal of een
+TSP nodig hebben — buiten scope van Sprint 6.
+
+---
+
 ## 📂 Repository Structure
 
 ```
@@ -402,6 +565,18 @@ bench --site nixfact.eu watch
 - [ ] UBL 2.1 XML generation
 - [ ] PDF + UBL combined
 - [ ] Peppol ready
+
+**SPRINT 6: Offerte Portal & Ondertekening**
+- [ ] Schema-uitbreiding `NixFact Offerte` (accept_token, signature, audit-velden)
+- [ ] Token-generatie in `before_insert`
+- [ ] Publieke portal-pagina `www/offerte.html` (token-gebaseerde toegang)
+- [ ] Signature canvas (touch + desktop)
+- [ ] Accept/Weiger API endpoints (allow_guest=True)
+- [ ] Audit trail logging (email, IP, user-agent, timestamp)
+- [ ] Audit PDF generatie met handtekening + footer
+- [ ] Bevestigingsmails klant + eigenaar
+- [ ] Settings-velden in `NixFactInstellingen`
+- [ ] Tests: token-flow, accept-flow, weiger-flow, immutability na ondertekening
 
 ---
 
