@@ -38,19 +38,18 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies
         run: |
-          pip install --no-cache-dir frappe-bench lxml pytest
+          pip install --no-cache-dir lxml pytest
       - name: Run tests
         env:
           PYTHONPATH: nixfact_integration
         run: |
-          # The tests in nixfact_integration/tests/ exercise PURE helpers
-          # (regex, fuzzy match, format string, namespace constants,
-          # date arithmetic). Anything that needs a Frappe site context
-          # is excluded — those tests must be run with `bench --site …
-          # run-tests` against a real site, which we wire up separately
-          # in the integration job below (TODO: add when bench fixtures
-          # land).
-          pytest nixfact_integration/tests/ -v --tb=short
+          # Pure-helper tests (regex, fuzzy match, format string, namespace
+          # constants, date arithmetic). The conftest in tests/ stubs the
+          # `frappe` module so these run without a bench. Anything that
+          # needs a Frappe site context must run via `bench --site …
+          # run-tests` against a real site (TODO: add integration job when
+          # bench fixtures land).
+          pytest nixfact_integration/nixfact_integration/tests/ -v --tb=short
 
   mcp:
     name: nixfact-mcp tests
