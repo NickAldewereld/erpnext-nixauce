@@ -74,6 +74,21 @@ def _install_frappe_stub() -> None:
     frappe = types.ModuleType("frappe")
     frappe._ = lambda msg, *args, **kw: str(msg)
 
+    # Create frappe.model.document module with Document base class
+    model = types.ModuleType("frappe.model")
+    document_module = types.ModuleType("frappe.model.document")
+
+    class Document:
+        """Minimal Document stub for test imports."""
+        def is_new(self):
+            return not hasattr(self, "name") or not self.name
+        def get_doc_before_save(self):
+            return None
+
+    document_module.Document = Document
+    model.document = document_module
+    frappe.model = model
+
     class _ValidationError(Exception):
         pass
 
@@ -124,6 +139,8 @@ def _install_frappe_stub() -> None:
 
     sys.modules["frappe"] = frappe
     sys.modules["frappe.utils"] = utils
+    sys.modules["frappe.model"] = model
+    sys.modules["frappe.model.document"] = document_module
 
 
 _install_frappe_stub()

@@ -27,6 +27,17 @@ class NixFactOfferte(Document):
     def autoname(self) -> None:
         set_nummer_for_doc(self, "NixFact Offerte")
 
+    def before_insert(self) -> None:
+        """Generate a public accept-token if one isn't already set.
+
+        The token gates access to the public portal page where the customer
+        accepts/rejects the quote. Existing tokens are preserved (test seeds,
+        manual paste from another system).
+        """
+        if not self.accept_token:
+            from nixfact_integration.utils.tokens import generate_accept_token
+            self.accept_token = generate_accept_token()
+
     def validate(self) -> None:
         self._sanity_check_bedragen()
         self._validate_status_transition()
