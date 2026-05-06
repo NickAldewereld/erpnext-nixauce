@@ -102,5 +102,37 @@ class TestAcceptedImmutability(unittest.TestCase):
         NixFactOfferte._guard_immutable_after_accept(doc)
 
 
+class TestPortalSentTimestamp(unittest.TestCase):
+    def test_concept_to_verstuurd_stamps(self):
+        doc = MagicMock(spec=NixFactOfferte)
+        doc.status = "Verstuurd"
+        doc.portal_verstuurd_op = None
+        doc.is_new = MagicMock(return_value=False)
+        old = MagicMock(); old.status = "Concept"
+        doc.get_doc_before_save = MagicMock(return_value=old)
+        NixFactOfferte._stamp_portal_sent(doc)
+        self.assertIsNotNone(doc.portal_verstuurd_op)
+
+    def test_other_transitions_no_stamp(self):
+        doc = MagicMock(spec=NixFactOfferte)
+        doc.status = "Geaccepteerd"
+        doc.portal_verstuurd_op = None
+        doc.is_new = MagicMock(return_value=False)
+        old = MagicMock(); old.status = "Verstuurd"
+        doc.get_doc_before_save = MagicMock(return_value=old)
+        NixFactOfferte._stamp_portal_sent(doc)
+        self.assertIsNone(doc.portal_verstuurd_op)
+
+    def test_existing_stamp_not_overwritten(self):
+        doc = MagicMock(spec=NixFactOfferte)
+        doc.status = "Verstuurd"
+        doc.portal_verstuurd_op = "2026-01-01 09:00:00"
+        doc.is_new = MagicMock(return_value=False)
+        old = MagicMock(); old.status = "Concept"
+        doc.get_doc_before_save = MagicMock(return_value=old)
+        NixFactOfferte._stamp_portal_sent(doc)
+        self.assertEqual(doc.portal_verstuurd_op, "2026-01-01 09:00:00")
+
+
 if __name__ == "__main__":
     unittest.main()

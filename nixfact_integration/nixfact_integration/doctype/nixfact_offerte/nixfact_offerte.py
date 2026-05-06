@@ -42,6 +42,7 @@ class NixFactOfferte(Document):
         self._sanity_check_bedragen()
         self._validate_status_transition()
         self._guard_immutable_after_accept()
+        self._stamp_portal_sent()
 
     def _guard_immutable_after_accept(self) -> None:
         """Audit fields are immutable once the offerte is signed.
@@ -100,3 +101,13 @@ class NixFactOfferte(Document):
                 _("Status mag niet van {0} naar {1}.").format(old.status, self.status),
                 frappe.ValidationError,
             )
+
+    def _stamp_portal_sent(self) -> None:
+        """Record portal_verstuurd_op the first time status flips to Verstuurd."""
+        if self.is_new() or self.portal_verstuurd_op:
+            return
+        if self.status != "Verstuurd":
+            return
+        old = self.get_doc_before_save()
+        if old and old.status != "Verstuurd":
+            self.portal_verstuurd_op = frappe.utils.now_datetime()
