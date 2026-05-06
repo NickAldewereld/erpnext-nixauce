@@ -1,8 +1,7 @@
 [Unit]
-Description=NixFact (Frappe/ERPNext) Web Server
-Documentation=https://nixfact.eu
-After=network-online.target mariadb.service redis.service
-Requires=mariadb.service redis.service
+Description=NixFact RQ worker (queue: %i)
+After=network-online.target nixfact.service mariadb.service redis.service
+Requires=nixfact.service mariadb.service redis.service
 
 [Service]
 Type=simple
@@ -11,22 +10,12 @@ Group=frappe
 WorkingDirectory=/home/frappe/frappe-bench
 EnvironmentFile=-/etc/nixfact/nixfact.env
 
-# Production server: gunicorn directly. `bench start` is dev-only and
-# spawns honcho + internal redis instances that conflict with the system
-# redis service.
-ExecStart=/home/frappe/.local/bin/gunicorn \
-    --bind 127.0.0.1:8000 \
-    --workers 4 \
-    --worker-class gthread \
-    --threads 4 \
-    --timeout 120 \
-    --preload \
-    frappe.app:application
+# Instance name is the queue (short, long, default).
+ExecStart=/home/frappe/.local/bin/bench worker --queue %i
 
 Restart=on-failure
 RestartSec=5
 
-# --- Sandboxing ---
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
@@ -39,7 +28,6 @@ ProtectControlGroups=true
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 RestrictNamespaces=true
 LockPersonality=true
-MemoryDenyWriteExecute=true
 SystemCallArchitectures=native
 CapabilityBoundingSet=
 AmbientCapabilities=

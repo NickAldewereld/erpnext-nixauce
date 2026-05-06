@@ -1,14 +1,24 @@
-version: "3.8"
+# Compose file for a self-hosted NixFact stack.
+#
+# Network segmentation: only the `nixfact` web service is on the `frontend`
+# network (alongside any reverse-proxy). MariaDB, Redis, workers and the
+# scheduler live on `backend` only — `internal: true` denies outbound
+# internet access from the data plane.
+#
+# Build once, run many: the `nixfact` service builds the image and tags it;
+# workers and scheduler reference the tag via `image:` so we don't rebuild
+# 1.5GB four times.
 
 services:
   mariadb:
     image: mariadb:10.11
     restart: unless-stopped
+    networks: [backend]
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME:-nixfact}
-      MYSQL_USER: ${DB_USER:-nixfact}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD must be set}
+      MYSQL_DATABASE: ${DB_NAME:?DB_NAME must be set}
+      MYSQL_USER: ${DB_USER:?DB_USER must be set}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./mariadb.cnf:/etc/mysql/conf.d/frappe.cnf:ro
@@ -17,77 +27,144 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    cap_add: [SETGID, SETUID, CHOWN, DAC_OVERRIDE, FOWNER, KILL]
+    mem_limit: 1g
+    pids_limit: 200
 
   redis-cache:
     image: redis:7-alpine
     restart: unless-stopped
+    networks: [backend]
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
     volumes:
       - redis_cache:/data
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 100
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis-queue:
     image: redis:7-alpine
     restart: unless-stopped
+    networks: [backend]
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      - --appendonly
+      - "yes"
     volumes:
       - redis_queue:/data
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 100
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nixfact:
     build:
       context: ../../
       dockerfile: deployment/docker/Dockerfile
+    image: nixfact:${NIXFACT_TAG:-local}
     restart: unless-stopped
+    networks: [frontend, backend]
     depends_on:
-      mariadb:
-        condition: service_healthy
-      redis-cache:
-        condition: service_started
-      redis-queue:
-        condition: service_started
+      mariadb: {condition: service_healthy}
+      redis-cache: {condition: service_healthy}
+      redis-queue: {condition: service_healthy}
     environment:
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - DB_NAME=${DB_NAME:-nixfact}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_CACHE=redis://redis-cache:6379
-      - REDIS_QUEUE=redis://redis-queue:6379
-      - SITE_NAME=${SITE_NAME:-nixfact.localhost}
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis-cache:6379
+      REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
+      SITE_NAME: ${SITE_NAME:?SITE_NAME must be set}
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
       - logs_data:/home/frappe/frappe-bench/logs
     ports:
-      - "${HTTP_PORT:-8080}:8000"
+      - "127.0.0.1:${HTTP_PORT:-8080}:8000"
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 2g
+    pids_limit: 500
+    read_only: false  # Frappe writes to /home/frappe/frappe-bench/sites — mount handles it
 
   worker-short:
-    build:
-      context: ../../
-      dockerfile: deployment/docker/Dockerfile
+    image: nixfact:${NIXFACT_TAG:-local}
     restart: unless-stopped
+    networks: [backend]
     depends_on:
-      - nixfact
-    command: bench worker --queue short
+      nixfact: {condition: service_healthy}
+    command: ["bench", "worker", "--queue", "short"]
+    environment:
+      REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis-cache:6379
+      REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 1g
+    pids_limit: 200
 
   worker-long:
-    build:
-      context: ../../
-      dockerfile: deployment/docker/Dockerfile
+    image: nixfact:${NIXFACT_TAG:-local}
     restart: unless-stopped
+    networks: [backend]
     depends_on:
-      - nixfact
-    command: bench worker --queue long
+      nixfact: {condition: service_healthy}
+    command: ["bench", "worker", "--queue", "long"]
+    environment:
+      REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis-cache:6379
+      REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 1g
+    pids_limit: 200
 
   scheduler:
-    build:
-      context: ../../
-      dockerfile: deployment/docker/Dockerfile
+    image: nixfact:${NIXFACT_TAG:-local}
     restart: unless-stopped
+    networks: [backend]
     depends_on:
-      - nixfact
-    command: bench schedule
+      nixfact: {condition: service_healthy}
+    command: ["bench", "schedule"]
+    environment:
+      REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis-cache:6379
+      REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 100
+
+networks:
+  frontend: {}
+  backend:
+    internal: true  # data plane has no outbound internet
 
 volumes:
   mariadb_data:

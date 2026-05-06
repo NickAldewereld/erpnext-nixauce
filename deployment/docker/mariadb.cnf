@@ -1,10 +1,23 @@
 [mysqld]
+# Charset
 character-set-client-handshake = FALSE
 character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
+default_authentication_plugin = mysql_native_password
+
+# Storage
 innodb-buffer-pool-size = 256M
 innodb-log-file-size = 64M
 innodb-file-per-table = 1
+
+# Network / DNS
+bind-address = 0.0.0.0
+skip-name-resolve
+max_connections = 200
+
+# Safety
+local_infile = 0
+sql_mode = STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
 
 [mysql]
 default-character-set = utf8mb4

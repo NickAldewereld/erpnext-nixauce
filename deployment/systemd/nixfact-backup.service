@@ -1,8 +1,28 @@
 [Unit]
-Description=NIXFact daily backup
+Description=NixFact daily backup
+After=mariadb.service
 
 [Service]
 Type=oneshot
 User=frappe
 Group=frappe
+WorkingDirectory=/home/frappe/frappe-bench
+EnvironmentFile=-/etc/nixfact/backup.env
 ExecStart=/opt/nixfact/scripts/backup.sh /opt/nixfact/backups
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/nixfact/backups /home/frappe/frappe-bench/sites /home/frappe/frappe-bench/logs
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077

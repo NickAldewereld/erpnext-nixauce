@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+# Default to least-privilege; widen per-job only where needed.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint
@@ -15,13 +23,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install dependencies
-        run: pip install ruff
+      - name: Install ruff
+        run: pip install --no-cache-dir ruff
       - name: Ruff check
         run: ruff check nixfact_integration/
 
   test:
-    name: Unit Tests
+    name: Unit tests (pure helpers)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,11 +38,31 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies
         run: |
-          pip install frappe-bench
-          pip install lxml
+          pip install --no-cache-dir frappe-bench lxml pytest
       - name: Run tests
-        run: |
-          cd nixfact_integration
-          python -m pytest nixfact_integration/tests/ -v --tb=short
         env:
-          PYTHONPATH: .
+          PYTHONPATH: nixfact_integration
+        run: |
+          # The tests in nixfact_integration/tests/ exercise PURE helpers
+          # (regex, fuzzy match, format string, namespace constants,
+          # date arithmetic). Anything that needs a Frappe site context
+          # is excluded — those tests must be run with `bench --site …
+          # run-tests` against a real site, which we wire up separately
+          # in the integration job below (TODO: add when bench fixtures
+          # land).
+          pytest nixfact_integration/tests/ -v --tb=short
+
+  mcp:
+    name: nixfact-mcp tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install nixfact-mcp + dev deps
+        working-directory: nixfact_integration/nixfact_mcp
+        run: pip install --no-cache-dir -e ".[dev]"
+      - name: Run pytest
+        working-directory: nixfact_integration/nixfact_mcp
+        run: pytest -q

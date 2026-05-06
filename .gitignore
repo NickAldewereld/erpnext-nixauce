@@ -8,11 +8,55 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.venv/
+.pytest_cache/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*~
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Secrets / runtime config — never commit
+.env
+**/.env
+*.env
+!.env.example
+!**/.env.example
+secrets/
+**/secrets/
+*.pem
+*.key
+!**/test-key*
+
+# Frappe site state
+sites/
+**/sites/
+**/private/
+common_site_config.json
+**/common_site_config.json
+
+# Database / backup artefacts
+*.sql
+*.sql.gz
+*.tar.gz
+*.dump
+backups/
+
+# Build / vendor / logs
+node_modules/
+yarn-error.log
+*.log
+
+# One-off content dumps (e.g. AI-generated repo snapshots)
+nixerp-full-content.txt
+*-full-content.txt
+*-snapshot.txt
+
+# Local dev tooling
+.aider*
+.bench/
