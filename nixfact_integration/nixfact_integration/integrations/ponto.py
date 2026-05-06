@@ -2,178 +2,228 @@
 # License: AGPL-3.0-or-later (https://www.gnu.org/licenses/agpl-3.0.html)
 # For commercial licensing, contact: nick@nixpay.nl
 
+"""Integration with the Ponto (Isabel Group) banking API."""
+
+from __future__ import annotations
+
 import frappe
 import requests
-from frappe.utils import get_datetime
+from frappe import _
+from frappe.utils import flt, get_datetime
+
+
+def _redact(text: str, *secrets: str) -> str:
+    """Strip known secrets from a string before logging."""
+    out = text or ""
+    for s in secrets:
+        if s:
+            out = out.replace(s, "[REDACTED]")
+    return out[:500]
 
 
 class PontoIntegration:
-	"""Integration with the Ponto (Isabel Group) banking API."""
+    BASE_URL = "https://api.myponto.com"
+    TOKEN_URL = "https://api.myponto.com/oauth2/token"
 
-	BASE_URL = "https://api.myponto.com"
-	TOKEN_URL = "https://api.myponto.com/oauth2/token"
+    def __init__(self, bank_koppeling) -> None:
+        if isinstance(bank_koppeling, str):
+            bank_koppeling = frappe.get_doc("NixFact Bank Koppeling", bank_koppeling)
 
-	def __init__(self, bank_koppeling):
-		"""
-		Initialize with a NixFact Bank Koppeling document.
+        self.koppeling = bank_koppeling
+        self.client_id = bank_koppeling.ponto_client_id
+        self.client_secret = bank_koppeling.get_password("ponto_client_secret")
+        self.refresh_token = bank_koppeling.get_password("ponto_refresh_token")
+        self.account_id = bank_koppeling.account_id
+        self.access_token: str | None = None
 
-		Args:
-		    bank_koppeling: name (str) or Document of NixFact Bank Koppeling
-		"""
-		if isinstance(bank_koppeling, str):
-			bank_koppeling = frappe.get_doc("NixFact Bank Koppeling", bank_koppeling)
+        if not (self.client_id and self.client_secret and self.refresh_token):
+            frappe.throw(
+                _("Ponto-credentials zijn niet volledig op deze bankkoppeling.")
+            )
 
-		self.koppeling = bank_koppeling
-		self.client_id = bank_koppeling.ponto_client_id
-		self.client_secret = bank_koppeling.get_password("ponto_client_secret")
-		self.refresh_token = bank_koppeling.get_password("ponto_refresh_token")
-		self.account_id = bank_koppeling.account_id
-		self.access_token = None
+    def authenticate(self) -> str:
+        """Obtain an access token using the stored refresh token."""
+        try:
+            response = requests.post(
+                self.TOKEN_URL,
+                data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": self.refresh_token,
+                },
+                auth=(self.client_id, self.client_secret),
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=30,
+            )
+        except requests.RequestException as e:
+            frappe.log_error(
+                title="Ponto authenticatie — netwerkfout",
+                message=_redact(str(e), self.client_secret, self.refresh_token),
+            )
+            frappe.throw(_("Ponto API fout: kon geen verbinding maken."))
 
-	def authenticate(self):
-		"""Obtain access token using client credentials + refresh token."""
-		response = requests.post(
-			self.TOKEN_URL,
-			data={
-				"grant_type": "refresh_token",
-				"client_id": self.client_id,
-				"refresh_token": self.refresh_token,
-			},
-			auth=(self.client_id, self.client_secret),
-			headers={"Content-Type": "application/x-www-form-urlencoded"},
-			timeout=30,
-		)
+        if response.status_code != 200:
+            frappe.log_error(
+                title="Ponto authenticatie mislukt",
+                message=_redact(
+                    f"Status {response.status_code}: {response.text}",
+                    self.client_secret,
+                    self.refresh_token,
+                ),
+            )
+            frappe.throw(
+                _("Ponto authenticatie mislukt: {0}").format(response.status_code)
+            )
 
-		if response.status_code != 200:
-			frappe.log_error(
-				title="Ponto authenticatie mislukt",
-				message=f"Status {response.status_code}: {response.text}",
-			)
-			frappe.throw(f"Ponto authenticatie mislukt: {response.status_code}")
+        data = response.json()
+        self.access_token = data["access_token"]
 
-		data = response.json()
-		self.access_token = data["access_token"]
+        # Persist the rotated refresh token immediately. Going through
+        # doc.save() ensures the Password fieldtype is encrypted at rest;
+        # frappe.db.set_value would store plaintext and break get_password().
+        new_refresh = data.get("refresh_token")
+        if new_refresh and new_refresh != self.refresh_token:
+            try:
+                koppeling = frappe.get_doc(
+                    "NixFact Bank Koppeling", self.koppeling.name
+                )
+                koppeling.ponto_refresh_token = new_refresh
+                koppeling.save(ignore_permissions=True)
+                frappe.db.commit()  # critical: do not roll back the rotation
+                self.refresh_token = new_refresh
+            except Exception:  # noqa: BLE001
+                frappe.log_error(
+                    title="Ponto refresh token opslaan mislukt",
+                    message=frappe.get_traceback(),
+                )
+                # Old refresh token has likely been invalidated by Ponto,
+                # so the koppeling will need re-OAuth. Surface to the user.
+                frappe.throw(
+                    _(
+                        "Kon vernieuwd Ponto-token niet opslaan; "
+                        "her-koppel de bankrekening."
+                    )
+                )
 
-		# Store new refresh token if provided
-		if "refresh_token" in data:
-			frappe.db.set_value(
-				"NixFact Bank Koppeling",
-				self.koppeling.name,
-				"ponto_refresh_token",
-				data["refresh_token"],
-			)
+        return self.access_token
 
-		return self.access_token
+    def get_transactions(self, after: str | None = None, limit: int = 100) -> list[dict]:
+        """Fetch a page of transactions from Ponto."""
+        if not self.access_token:
+            self.authenticate()
 
-	def get_transactions(self, after=None, limit=100):
-		"""
-		Fetch transactions from Ponto API.
+        url = f"{self.BASE_URL}/accounts/{self.account_id}/transactions"
+        params: dict[str, str | int] = {"limit": min(int(limit), 100)}
+        if after:
+            params["after"] = after
 
-		Args:
-		    after: Cursor for pagination (transaction ID to start after)
-		    limit: Max transactions to fetch (default 100)
+        try:
+            response = requests.get(
+                url,
+                params=params,
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Accept": "application/json",
+                },
+                timeout=30,
+            )
+        except requests.RequestException as e:
+            frappe.log_error(
+                title="Ponto transacties — netwerkfout",
+                message=_redact(str(e), self.access_token, self.client_secret),
+            )
+            frappe.throw(_("Ponto API fout: kon geen verbinding maken."))
 
-		Returns:
-		    list[dict]: Raw transaction data from Ponto
-		"""
-		if not self.access_token:
-			self.authenticate()
+        if response.status_code != 200:
+            frappe.log_error(
+                title="Ponto transacties ophalen mislukt",
+                message=_redact(
+                    f"Status {response.status_code}: {response.text}",
+                    self.access_token,
+                    self.client_secret,
+                    self.refresh_token,
+                ),
+            )
+            frappe.throw(_("Ponto API fout: {0}").format(response.status_code))
 
-		url = f"{self.BASE_URL}/accounts/{self.account_id}/transactions"
-		params = {"limit": min(limit, 100)}
-		if after:
-			params["after"] = after
+        return response.json().get("data", [])
 
-		response = requests.get(
-			url,
-			params=params,
-			headers={
-				"Authorization": f"Bearer {self.access_token}",
-				"Accept": "application/json",
-			},
-			timeout=30,
-		)
+    def parse_transactions(self, raw_transactions: list[dict]) -> list[dict]:
+        """Normalize Ponto API responses to NixFact Bank Transactie shape.
 
-		if response.status_code != 200:
-			frappe.log_error(
-				title="Ponto transacties ophalen mislukt",
-				message=f"Status {response.status_code}: {response.text}",
-			)
-			frappe.throw(f"Ponto API fout: {response.status_code}")
+        ``omschrijving`` concatenates structured + unstructured remittance
+        info so the matching engine has both available even if Ponto only
+        emits one.
+        """
+        parsed = []
+        for txn in raw_transactions:
+            attrs = txn.get("attributes", {}) or {}
 
-		data = response.json()
-		return data.get("data", [])
+            structured = (attrs.get("remittanceInformationStructured") or "").strip()
+            unstructured = (attrs.get("remittanceInformation") or "").strip()
+            description = (attrs.get("description") or "").strip()
+            joined = " | ".join(p for p in (description, unstructured, structured) if p)
 
-	def parse_transactions(self, raw_transactions):
-		"""
-		Parse raw Ponto API responses into standardized dicts.
+            parsed.append(
+                {
+                    "transactie_id": txn.get("id", ""),
+                    "datum": (
+                        attrs.get("executionDate")
+                        or attrs.get("valueDate", "")
+                    ),
+                    "bedrag": flt(attrs.get("amount", 0), 2),
+                    "van_naar": (attrs.get("counterpartReference") or "").strip(),
+                    "naam": (attrs.get("counterpartName") or "").strip(),
+                    "omschrijving": joined,
+                    "referentie": structured or unstructured,
+                }
+            )
+        return parsed
 
-		Args:
-		    raw_transactions: list of dicts from get_transactions()
+    def sync(self) -> dict[str, int]:
+        """Pull new transactions and insert them. Idempotent on transactie_id."""
+        self.authenticate()
 
-		Returns:
-		    list[dict]: Parsed transactions ready for NixFact Bank Transactie
-		"""
-		parsed = []
-		for txn in raw_transactions:
-			attrs = txn.get("attributes", {})
-			counterparty = attrs.get("counterpartName", "")
-			parsed.append({
-				"transactie_id": txn.get("id", ""),
-				"datum": attrs.get("executionDate") or attrs.get("valueDate", ""),
-				"bedrag": float(attrs.get("amount", 0)),
-				"van_naar": attrs.get("counterpartReference", ""),
-				"naam": counterparty,
-				"omschrijving": attrs.get("description", "")
-					or attrs.get("remittanceInformation", ""),
-				"referentie": attrs.get("remittanceInformationStructured", "")
-					or attrs.get("remittanceInformation", ""),
-			})
-		return parsed
+        raw = self.get_transactions()
+        parsed = self.parse_transactions(raw)
 
-	def sync(self):
-		"""
-		Full sync: authenticate, fetch transactions, import new ones.
+        imported = 0
+        skipped = 0
 
-		Returns:
-		    dict: {imported: int, skipped: int}
-		"""
-		self.authenticate()
+        for txn in parsed:
+            if not txn["transactie_id"]:
+                skipped += 1
+                continue
+            if frappe.db.exists(
+                "NixFact Bank Transactie",
+                {"transactie_id": txn["transactie_id"]},
+            ):
+                skipped += 1
+                continue
 
-		raw = self.get_transactions()
-		parsed = self.parse_transactions(raw)
+            doc = frappe.get_doc(
+                {
+                    "doctype": "NixFact Bank Transactie",
+                    "transactie_id": txn["transactie_id"],
+                    "bank_koppeling": self.koppeling.name,
+                    "datum": txn["datum"],
+                    "bedrag": txn["bedrag"],
+                    "van_naar": txn["van_naar"],
+                    "naam": txn["naam"],
+                    "omschrijving": txn["omschrijving"],
+                    "referentie": txn["referentie"],
+                    "status": "Onverwerkt",
+                }
+            )
+            doc.insert(ignore_permissions=True)  # cron-only; perms enforced upstream
+            imported += 1
 
-		imported = 0
-		skipped = 0
+        frappe.db.set_value(
+            "NixFact Bank Koppeling",
+            self.koppeling.name,
+            "laatste_sync",
+            get_datetime(),
+            update_modified=False,
+        )
+        frappe.db.commit()
 
-		for txn in parsed:
-			# Skip if already imported
-			if frappe.db.exists("NixFact Bank Transactie", {"transactie_id": txn["transactie_id"]}):
-				skipped += 1
-				continue
-
-			doc = frappe.get_doc({
-				"doctype": "NixFact Bank Transactie",
-				"transactie_id": txn["transactie_id"],
-				"bank_koppeling": self.koppeling.name,
-				"datum": txn["datum"],
-				"bedrag": txn["bedrag"],
-				"van_naar": txn["van_naar"],
-				"naam": txn["naam"],
-				"omschrijving": txn["omschrijving"],
-				"referentie": txn["referentie"],
-				"status": "Onverwerkt",
-			})
-			doc.insert(ignore_permissions=True)
-			imported += 1
-
-		# Update last sync timestamp
-		frappe.db.set_value(
-			"NixFact Bank Koppeling",
-			self.koppeling.name,
-			"laatste_sync",
-			get_datetime(),
-		)
-		frappe.db.commit()
-
-		return {"imported": imported, "skipped": skipped}
+        return {"imported": imported, "skipped": skipped}
