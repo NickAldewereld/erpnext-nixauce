@@ -2,9 +2,6 @@
 # License: AGPL-3.0-or-later (https://www.gnu.org/licenses/agpl-3.0.html)
 # For commercial licensing, contact: nick@nixpay.nl
 
-"""
-NixFact Integration App
-Provides integration between ERPNext and NixFact accounting software
-"""
+"""NixFact: WeFact-inspired Dutch invoicing on Frappe / ERPNext."""
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
