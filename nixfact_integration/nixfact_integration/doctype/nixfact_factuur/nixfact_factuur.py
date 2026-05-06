@@ -2,33 +2,72 @@
 # License: AGPL-3.0-or-later (https://www.gnu.org/licenses/agpl-3.0.html)
 # For commercial licensing, contact: nick@nixpay.nl
 
+from __future__ import annotations
+
 import frappe
+from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, nowdate, getdate
+from frappe.utils import add_days, flt
 
 from nixfact_integration.utils.numbering import set_nummer_for_doc
+
+# Allowed status transitions. Anything not listed is blocked at validate time.
+_ALLOWED_TRANSITIONS: dict[str, set[str]] = {
+    "Concept": {"Concept", "Verstuurd", "Oninbaar"},
+    "Verstuurd": {"Verstuurd", "Betaald", "Herinnering verstuurd", "Oninbaar"},
+    "Herinnering verstuurd": {
+        "Herinnering verstuurd",
+        "Betaald",
+        "Aanmaning verstuurd",
+        "Oninbaar",
+    },
+    "Aanmaning verstuurd": {"Aanmaning verstuurd", "Betaald", "Oninbaar"},
+    "Betaald": {"Betaald"},  # terminal — credit-note flow needed to revert
+    "Oninbaar": {"Oninbaar"},  # terminal
+}
 
 
 class NixFactFactuur(Document):
 
-	def autoname(self):
-		set_nummer_for_doc(self, "NixFact Factuur")
+    def autoname(self) -> None:
+        set_nummer_for_doc(self, "NixFact Factuur")
 
-	def validate(self):
-		self.bereken_bedragen()
-		self.set_vervaldatum()
+    def validate(self) -> None:
+        self.bereken_bedragen()
+        self.set_vervaldatum()
+        self._validate_status_transition()
 
-	def bereken_bedragen(self):
-		"""Calculate BTW and totals."""
-		if self.bedrag_excl_btw:
-			btw_pct = (self.btw_percentage or 0) / 100
-			self.btw_bedrag = self.bedrag_excl_btw * btw_pct
-			self.bedrag_incl_btw = self.bedrag_excl_btw + self.btw_bedrag
-			self.openstaand_bedrag = self.bedrag_incl_btw - (self.betaald_bedrag or 0)
+    def bereken_bedragen(self) -> None:
+        """Compute BTW + totalen with currency-safe rounding."""
+        excl = flt(self.bedrag_excl_btw, 2) if self.bedrag_excl_btw else 0
+        pct = flt(self.btw_percentage or 0, 2)
+        self.btw_bedrag = flt(excl * pct / 100, 2)
+        self.bedrag_incl_btw = flt(excl + self.btw_bedrag, 2)
+        self.openstaand_bedrag = flt(
+            self.bedrag_incl_btw - flt(self.betaald_bedrag or 0, 2), 2
+        )
 
-	def set_vervaldatum(self):
-		"""Set due date from settings if not manually set."""
-		if self.factuur_datum and not self.vervaldatum:
-			settings = frappe.get_single("NixFact Instellingen")
-			dagen = settings.betalingstermijn_facturen or 14
-			self.vervaldatum = add_days(self.factuur_datum, dagen)
+    def set_vervaldatum(self) -> None:
+        """Set due date from settings if not manually set."""
+        if self.factuur_datum and not self.vervaldatum:
+            settings = frappe.get_single("NixFact Instellingen")
+            dagen = max(1, int(settings.betalingstermijn_facturen or 14))
+            self.vervaldatum = add_days(self.factuur_datum, dagen)
+
+    def _validate_status_transition(self) -> None:
+        """Block illegal status transitions on saved docs."""
+        if self.is_new():
+            return
+        old = self.get_doc_before_save()
+        if not old:
+            return
+        old_status = old.status
+        new_status = self.status
+        if old_status == new_status:
+            return
+        allowed = _ALLOWED_TRANSITIONS.get(old_status, set())
+        if new_status not in allowed:
+            frappe.throw(
+                _("Status mag niet van {0} naar {1}.").format(old_status, new_status),
+                frappe.ValidationError,
+            )
