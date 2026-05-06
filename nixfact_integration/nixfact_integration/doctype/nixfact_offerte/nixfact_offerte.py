@@ -41,6 +41,32 @@ class NixFactOfferte(Document):
     def validate(self) -> None:
         self._sanity_check_bedragen()
         self._validate_status_transition()
+        self._guard_immutable_after_accept()
+
+    def _guard_immutable_after_accept(self) -> None:
+        """Audit fields are immutable once the offerte is signed.
+
+        `handtekening` + `ondertekend_*` form the legal audit record. After
+        `ondertekend_op` is set, any change is a tamper attempt — block it.
+        """
+        if self.is_new() or not self.ondertekend_op:
+            return
+        old = self.get_doc_before_save()
+        if not old:
+            return
+        locked = (
+            "handtekening",
+            "ondertekend_op",
+            "ondertekend_door_email",
+            "ondertekend_ip",
+            "ondertekend_user_agent",
+        )
+        for field in locked:
+            if getattr(old, field, None) != getattr(self, field, None):
+                frappe.throw(
+                    _("Ondertekende offerte kan niet meer gewijzigd worden."),
+                    frappe.ValidationError,
+                )
 
     def _sanity_check_bedragen(self) -> None:
         """Reject inconsistent bedrag_excl / bedrag_incl pairs.
