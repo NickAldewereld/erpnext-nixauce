@@ -317,9 +317,11 @@ touch en desktop). Audit trail wordt opgeslagen op de offerte zelf.
 Nieuwe sectie "Ondertekening" met velden:
 ```
 - accept_token (Data, hidden, unique, read_only)        # 32-char URL-safe token
-- portal_url (Data, read_only, depends_on: accept_token) # gegenereerd uit token
 - portal_verstuurd_op (Datetime, read_only)
-- handtekening (Signature, depends_on: status == "Geaccepteerd")
+- handtekening (Long Text, hidden, read_only)            # PNG data-URL — Long Text omdat
+                                                         # Frappe's Signature fieldtype
+                                                         # alleen voor authenticated desk
+                                                         # users werkt, niet voor Guests
 - ondertekend_op (Datetime, read_only)
 - ondertekend_door_email (Data, read_only)
 - ondertekend_ip (Data, read_only)
