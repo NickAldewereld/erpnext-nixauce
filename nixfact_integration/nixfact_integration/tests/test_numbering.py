@@ -5,7 +5,7 @@
 """Tests for the auto-numbering engine."""
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from nixfact_integration.utils.numbering import _format_nummer, DOCTYPE_NUMBERING
 

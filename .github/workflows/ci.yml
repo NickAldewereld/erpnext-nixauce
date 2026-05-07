@@ -38,7 +38,7 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies
         run: |
-          pip install --no-cache-dir lxml pytest
+          pip install --no-cache-dir lxml pytest requests
       - name: Run tests
         env:
           PYTHONPATH: nixfact_integration

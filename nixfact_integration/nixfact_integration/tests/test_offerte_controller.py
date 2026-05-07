@@ -139,7 +139,8 @@ class TestPortalSentTimestamp(unittest.TestCase):
         doc.status = "Verstuurd"
         doc.portal_verstuurd_op = None
         doc.is_new = MagicMock(return_value=False)
-        old = MagicMock(); old.status = "Concept"
+        old = MagicMock()
+        old.status = "Concept"
         doc.get_doc_before_save = MagicMock(return_value=old)
         NixFactOfferte._stamp_portal_sent(doc)
         self.assertIsNotNone(doc.portal_verstuurd_op)
@@ -149,7 +150,8 @@ class TestPortalSentTimestamp(unittest.TestCase):
         doc.status = "Geaccepteerd"
         doc.portal_verstuurd_op = None
         doc.is_new = MagicMock(return_value=False)
-        old = MagicMock(); old.status = "Verstuurd"
+        old = MagicMock()
+        old.status = "Verstuurd"
         doc.get_doc_before_save = MagicMock(return_value=old)
         NixFactOfferte._stamp_portal_sent(doc)
         self.assertIsNone(doc.portal_verstuurd_op)
@@ -159,7 +161,8 @@ class TestPortalSentTimestamp(unittest.TestCase):
         doc.status = "Verstuurd"
         doc.portal_verstuurd_op = "2026-01-01 09:00:00"
         doc.is_new = MagicMock(return_value=False)
-        old = MagicMock(); old.status = "Concept"
+        old = MagicMock()
+        old.status = "Concept"
         doc.get_doc_before_save = MagicMock(return_value=old)
         NixFactOfferte._stamp_portal_sent(doc)
         self.assertEqual(doc.portal_verstuurd_op, "2026-01-01 09:00:00")

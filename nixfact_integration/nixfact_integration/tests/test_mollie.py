@@ -5,7 +5,6 @@
 """Tests for Mollie payment integration."""
 
 import unittest
-from unittest.mock import patch, MagicMock
 
 from nixfact_integration.integrations.mollie import PAYMENT_ID_PATTERN
 
