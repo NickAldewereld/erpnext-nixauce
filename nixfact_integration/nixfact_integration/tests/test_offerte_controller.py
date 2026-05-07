@@ -98,8 +98,39 @@ class TestAcceptedImmutability(unittest.TestCase):
         doc = MagicMock(spec=NixFactOfferte)
         doc.ondertekend_op = None
         doc.is_new = MagicMock(return_value=False)
+        old = MagicMock()
+        old.ondertekend_op = None  # DB record also unsigned — guard must not engage.
+        doc.get_doc_before_save = MagicMock(return_value=old)
         # Should return immediately, no exception
         NixFactOfferte._guard_immutable_after_accept(doc)
+
+    def test_first_sign_not_blocked_by_guard(self):
+        """The guard must allow the very first sign-save to pass.
+
+        Pre-fix bug: the guard gated on self.ondertekend_op (always set
+        on accept), not old.ondertekend_op (None until persisted), so it
+        threw on every first sign. This test pins the fixed behaviour.
+        """
+        from datetime import datetime
+        doc = MagicMock(spec=NixFactOfferte)
+        doc.ondertekend_op = datetime(2026, 5, 7, 14, 0, 0)
+        doc.handtekening = "data:image/png;base64,NEWSIG"
+        doc.ondertekend_door_email = "klant@example.com"
+        doc.ondertekend_ip = "1.2.3.4"
+        doc.ondertekend_user_agent = "Mozilla/5.0"
+        doc.is_new = MagicMock(return_value=False)
+        old = MagicMock()
+        # Critical: old record was UNSIGNED — this is the first-sign save.
+        old.ondertekend_op = None
+        old.handtekening = None
+        old.ondertekend_door_email = None
+        old.ondertekend_ip = None
+        old.ondertekend_user_agent = None
+        doc.get_doc_before_save = MagicMock(return_value=old)
+        try:
+            NixFactOfferte._guard_immutable_after_accept(doc)
+        except Exception as e:  # noqa: BLE001
+            self.fail(f"Guard incorrectly blocked first sign: {e}")
 
 
 class TestPortalSentTimestamp(unittest.TestCase):

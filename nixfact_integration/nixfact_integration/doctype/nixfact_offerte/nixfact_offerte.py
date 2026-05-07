@@ -48,12 +48,17 @@ class NixFactOfferte(Document):
         """Audit fields are immutable once the offerte is signed.
 
         `handtekening` + `ondertekend_*` form the legal audit record. After
-        `ondertekend_op` is set, any change is a tamper attempt — block it.
+        `ondertekend_op` is set in the database, any subsequent change to
+        those fields is a tamper attempt — block it.
+
+        The first sign-save itself passes cleanly because `old.ondertekend_op`
+        is still None at that point — the guard only engages once the audit
+        fields have been persisted.
         """
-        if self.is_new() or not self.ondertekend_op:
+        if self.is_new():
             return
         old = self.get_doc_before_save()
-        if not old:
+        if not old or not getattr(old, "ondertekend_op", None):
             return
         locked = (
             "handtekening",
