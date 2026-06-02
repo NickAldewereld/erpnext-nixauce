@@ -66,7 +66,7 @@ lapses. This gives room to do A→D properly rather than rushing a migration.
 | Stack form | **Docker-compose** (`deployment/docker/docker-compose.yml`), RAM-trimmed. |
 | Auth | **Authentik OIDC SSO** into Frappe (single login). Consistent with the Nextcloud installs already using Authentik OIDC on the VPS. |
 | Reverse proxy / TLS | **Caddy on the VPS** (automatic Let's Encrypt), same pattern as `sign.`/`foto.`. |
-| Backups | Layer 1: nightly `bench backup` → HDD bind-mount picked up by existing borgmatic (LXC 200). Layer 2 (optional): weekly PVE `vzdump` → `local-pbs`. |
+| Backups | Nightly `bench backup` → HDD bind-mount picked up by the existing borgmatic (LXC 200). (PVE `vzdump`/PBS layer considered and dropped — borgmatic is enough.) |
 
 ## Architecture
 
@@ -126,12 +126,12 @@ outbound internet), per the compose file's existing segmentation.
 
 ## Backups
 
-- **Layer 1 (essential):** cron in the LXC runs
-  `bench --site <site> backup --with-files` nightly; output lands on the HDD
-  bind-mount `/mnt/pve/wd1tb/nixfact/backups`. Add that path to LXC 200's
-  borgmatic `source_directories` so it joins the existing encrypted repo with
-  retention (`keep_daily 7 / keep_weekly 4 / keep_monthly 3`).
-- **Layer 2 (optional):** weekly PVE `vzdump` of the LXC → `local-pbs`.
+- Cron in the LXC runs `bench --site <site> backup --with-files` nightly; output
+  lands on the HDD bind-mount `/mnt/pve/wd1tb/nixfact/backups`. Add that path to
+  LXC 200's borgmatic `source_directories` so it joins the existing encrypted
+  repo with retention (`keep_daily 7 / keep_weekly 4 / keep_monthly 3`).
+- A PVE `vzdump`/PBS layer was considered and dropped — the borgmatic-captured
+  `bench` backups (DB + files) are sufficient.
 
 ## Security
 
