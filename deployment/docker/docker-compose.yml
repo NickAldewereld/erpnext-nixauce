@@ -49,7 +49,7 @@ services:
       - redis_cache:/data
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
-    mem_limit: 512m
+    mem_limit: 192m
     pids_limit: 100
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
@@ -71,7 +71,7 @@ services:
       - redis_queue:/data
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
-    mem_limit: 512m
+    mem_limit: 192m
     pids_limit: 100
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
@@ -103,45 +103,30 @@ services:
       - sites_data:/home/frappe/frappe-bench/sites
       - logs_data:/home/frappe/frappe-bench/logs
     ports:
-      - "127.0.0.1:${HTTP_PORT:-8080}:8000"
+      - "${BIND_HOST:-127.0.0.1}:${HTTP_PORT:-8080}:8000"
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
-    mem_limit: 2g
+    mem_limit: 1500m
     pids_limit: 500
     read_only: false  # Frappe writes to /home/frappe/frappe-bench/sites — mount handles it
 
-  worker-short:
+  worker:
     image: nixfact:${NIXFACT_TAG:-local}
     restart: unless-stopped
     networks: [backend]
     depends_on:
       nixfact: {condition: service_healthy}
-    command: ["bench", "worker", "--queue", "short"]
+    command: ["bench", "worker", "--queue", "short,long"]
     environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
       REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis-cache:6379
       REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
-    mem_limit: 1g
-    pids_limit: 200
-
-  worker-long:
-    image: nixfact:${NIXFACT_TAG:-local}
-    restart: unless-stopped
-    networks: [backend]
-    depends_on:
-      nixfact: {condition: service_healthy}
-    command: ["bench", "worker", "--queue", "long"]
-    environment:
-      REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis-cache:6379
-      REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
-    volumes:
-      - sites_data:/home/frappe/frappe-bench/sites
-    security_opt: ["no-new-privileges:true"]
-    cap_drop: [ALL]
-    mem_limit: 1g
+    mem_limit: 768m
     pids_limit: 200
 
   scheduler:
@@ -152,13 +137,15 @@ services:
       nixfact: {condition: service_healthy}
     command: ["bench", "schedule"]
     environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
       REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis-cache:6379
       REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
-    mem_limit: 512m
+    mem_limit: 256m
     pids_limit: 100
 
 networks:
