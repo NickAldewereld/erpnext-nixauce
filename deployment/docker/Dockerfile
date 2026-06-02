@@ -94,13 +94,17 @@ COPY --chown=frappe:frappe --from=builder /home/frappe/frappe-bench /home/frappe
 
 WORKDIR /home/frappe/frappe-bench
 
+COPY --chown=frappe:frappe deployment/docker/entrypoint.sh /entrypoint.sh
+COPY --chown=frappe:frappe deployment/docker/init.sh /init.sh
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -fsS http://127.0.0.1:8000/api/method/ping || exit 1
 
-# Use tini as PID 1 for proper signal handling.
-ENTRYPOINT ["/usr/bin/tini", "--"]
+# Use tini as PID 1 for proper signal handling; entrypoint.sh wires
+# DB/Redis env into common_site_config.json before exec'ing the CMD.
+ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]
 
 # Default CMD = production web. Compose overrides this for worker / scheduler.
 CMD ["bash", "-lc", "exec gunicorn --bind 0.0.0.0:8000 --workers 4 --worker-class gthread --threads 4 --timeout 120 --preload frappe.app:application"]
