@@ -45,10 +45,16 @@ services:
       - 256mb
       - --maxmemory-policy
       - allkeys-lru
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis_cache:/data
     security_opt: ["no-new-privileges:true"]
+    # Nested in an unprivileged LXC the redis entrypoint steps down from root to
+    # the redis user (setpriv), needing these caps; cap_drop:[ALL] alone
+    # crash-loops with "setresuid: Operation not permitted".
     cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, SETPCAP]
     mem_limit: 192m
     pids_limit: 100
     healthcheck:
@@ -67,10 +73,14 @@ services:
       - ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
       - --appendonly
       - "yes"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis_queue:/data
     security_opt: ["no-new-privileges:true"]
+    # See redis-cache: caps needed for the entrypoint's privilege drop in LXC.
     cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, SETPCAP]
     mem_limit: 192m
     pids_limit: 100
     healthcheck:
