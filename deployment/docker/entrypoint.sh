@@ -5,6 +5,12 @@
 # each boot, leaves everything else untouched.
 set -euo pipefail
 
+# When no site is bound (e.g. gunicorn --preload importing frappe.utils.pdf,
+# which sets up the cssutils logger), Frappe resolves its log dir one level
+# above the bench: /home/frappe/logs. That dir doesn't exist in the image and
+# the web process crashes on a RotatingFileHandler open. Ensure it exists.
+mkdir -p /home/frappe/logs /home/frappe/frappe-bench/logs
+
 CONFIG="/home/frappe/frappe-bench/sites/common_site_config.json"
 
 python3 - "$CONFIG" <<'PY'
