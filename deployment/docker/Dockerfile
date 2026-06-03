@@ -87,7 +87,7 @@ RUN bench setup requirements \
 FROM ${PYTHON_IMAGE} AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
-    PATH="/home/frappe/.local/bin:${PATH}" \
+    PATH="/home/frappe/.local/bin:/home/frappe/frappe-bench/env/bin:${PATH}" \
     DEBIAN_FRONTEND=noninteractive
 
 # wkhtmltopdf is discontinued upstream and has known CVEs; track Frappe v17
