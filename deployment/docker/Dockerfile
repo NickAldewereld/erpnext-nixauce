@@ -129,5 +129,7 @@ ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]
 # Default CMD = production web. Compose overrides this for worker / scheduler.
 # Use `bash -c` (NOT `-lc`): a login shell re-sources /etc/profile and resets
 # PATH to the system default, dropping the bench venv so `gunicorn` isn't found.
-# 2 workers fits the trimmed ~1.5g web mem_limit (preload shares via CoW).
-CMD ["bash", "-c", "exec gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class gthread --threads 4 --timeout 120 --preload frappe.app:application"]
+# NO --preload: importing frappe.app in the gunicorn master (no site bound)
+# leaves frappe.local in a state the forked workers don't re-init per request,
+# so every request 404s "<site> does not exist". 2 workers fits the ~1.5g limit.
+CMD ["bash", "-c", "exec gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class gthread --threads 4 --timeout 120 frappe.app:application"]
