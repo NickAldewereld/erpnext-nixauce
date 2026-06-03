@@ -119,8 +119,10 @@ COPY --chown=frappe:frappe deployment/docker/init.sh /init.sh
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD curl -fsS http://127.0.0.1:8000/api/method/ping || exit 1
+# Send the site's Host header: Frappe resolves the site from Host and a bare
+# 127.0.0.1 has no matching site (404). SITE_NAME is provided via compose env.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=5 \
+    CMD curl -fsS -H "Host: ${SITE_NAME:-localhost}" http://127.0.0.1:8000/api/method/ping || exit 1
 
 # Use tini as PID 1 for proper signal handling; entrypoint.sh wires
 # DB/Redis env into common_site_config.json before exec'ing the CMD.

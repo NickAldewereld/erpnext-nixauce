@@ -9,13 +9,14 @@ set -euo pipefail
 # tini is PID 1), and Frappe resolves sites_path and its log dir RELATIVE TO THE
 # CWD. From / that means /sites (empty -> every site 404s) and /home/frappe/logs.
 # Anchoring to the bench dir here fixes web, workers and scheduler in one place.
-cd /home/frappe/frappe-bench
-
-# frappe.app reads sites_path from $SITES_PATH (default "."), so the bare
-# gunicorn web looks for sites at <cwd>/<site> instead of <cwd>/sites/<site>
-# and 404s "<site> does not exist" — even though the site is valid (bench works,
-# because bench sets sites_path to "sites"). Point it at the real sites dir;
-# this also fixes the /assets and /files middleware (same _sites_path).
+# Standard Frappe production runs gunicorn with the cwd = the bench's sites/
+# directory: Frappe resolves site config AND per-site log paths relative to the
+# cwd (sites_path default "."). Running from the bench dir instead makes it look
+# for <site>/ and <site>/logs at the bench root (missing the sites/ segment),
+# which 404s the site and crashes the worker on the site-log open. So cd into
+# sites/, and also set SITES_PATH explicitly (belt-and-suspenders; also drives
+# the /assets and /files middleware).
+cd /home/frappe/frappe-bench/sites
 export SITES_PATH=/home/frappe/frappe-bench/sites
 
 # Belt-and-suspenders for the cssutils logger path resolved before a site binds.
