@@ -96,6 +96,7 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        ca-certificates \
+       git \
        libmariadb3 mariadb-client \
        libssl3 libffi8 \
        wkhtmltopdf xvfb \
