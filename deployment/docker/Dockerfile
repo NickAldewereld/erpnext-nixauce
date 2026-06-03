@@ -14,7 +14,8 @@ ARG PYTHON_IMAGE=python:3.14-slim-bookworm
 # version-17 is cut. Override at build time with --build-arg if needed.
 ARG FRAPPE_BRANCH=develop
 ARG ERPNEXT_BRANCH=develop
-ARG NODE_MAJOR=20
+# Frappe develop requires Node >=24.
+ARG NODE_MAJOR=24
 
 # --------------------------------------------------------------------------
 # Stage 1: builder — compiles wheels, fetches Frappe + ERPNext, builds assets.
