@@ -6,8 +6,8 @@
 # redis instances) is intentionally NOT used here — it conflicts with the
 # external redis services and breaks session/queue state in production.
 
-# Frappe's develop line (v17) uses Python 3.12+ syntax; 3.11's parser rejects it.
-ARG PYTHON_IMAGE=python:3.12-slim-bookworm
+# Frappe's develop line (frappe 17.0.0.dev0) pins Python >=3.14,<3.15.
+ARG PYTHON_IMAGE=python:3.14-slim-bookworm
 # Frappe 17 has no cut `version-17` branch yet; the v17 dev line lives on
 # `develop` upstream (latest released branch is version-16). nixfact_integration
 # requires frappe >=17.0.0-dev, so we track `develop`. Pin to a tag/commit once
