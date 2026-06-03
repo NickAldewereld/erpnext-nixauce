@@ -116,6 +116,10 @@ WORKDIR /home/frappe/frappe-bench
 
 COPY --chown=frappe:frappe deployment/docker/entrypoint.sh /entrypoint.sh
 COPY --chown=frappe:frappe deployment/docker/init.sh /init.sh
+# WSGI wrapper that adds Frappe's /assets + /files static middleware (no nginx
+# sidecar in this stack). Lives in the bench root so gunicorn --pythonpath finds
+# it; it can't go under sites/ (that path is a mounted volume at runtime).
+COPY --chown=frappe:frappe deployment/docker/nixfact_wsgi.py /home/frappe/frappe-bench/nixfact_wsgi.py
 
 EXPOSE 8000
 
@@ -134,4 +138,4 @@ ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]
 # NO --preload: importing frappe.app in the gunicorn master (no site bound)
 # leaves frappe.local in a state the forked workers don't re-init per request,
 # so every request 404s "<site> does not exist". 2 workers fits the ~1.5g limit.
-CMD ["bash", "-c", "exec gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class gthread --threads 4 --timeout 120 frappe.app:application"]
+CMD ["bash", "-c", "exec gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class gthread --threads 4 --timeout 120 --pythonpath /home/frappe/frappe-bench nixfact_wsgi:application"]
