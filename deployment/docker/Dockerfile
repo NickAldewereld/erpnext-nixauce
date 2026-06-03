@@ -65,6 +65,19 @@ RUN bench get-app erpnext --branch ${ERPNEXT_BRANCH}
 
 COPY --chown=frappe:frappe ./nixfact_integration apps/nixfact_integration
 
+# bench treats every dir under apps/ as a git repo (git.Repo(app_path)); the
+# COPY above is plain files, so `bench setup requirements` raises
+# InvalidGitRepositoryError. Init a throwaway repo so bench's app tooling
+# accepts it, and register it in apps.txt for requirements/build/install.
+RUN cd apps/nixfact_integration \
+    && git init -q \
+    && git add -A \
+    && git -c user.email=build@nixfact.local -c user.name=build \
+       commit -qm "vendored nixfact_integration" \
+    && cd /home/frappe/frappe-bench \
+    && (grep -qxF nixfact_integration sites/apps.txt 2>/dev/null \
+        || echo nixfact_integration >> sites/apps.txt)
+
 RUN bench setup requirements \
     && bench build --app nixfact_integration
 
