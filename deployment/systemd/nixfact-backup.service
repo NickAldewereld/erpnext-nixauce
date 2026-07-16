@@ -8,9 +8,10 @@
 # where bench lives, so we exec into the web container, which carries the
 # script, age, and the /backups bind-mount.
 #
-# The archive is encrypted inside the container before it is written out, so the
-# plaintext dump — which contains Frappe's encryption_key, and with it every
-# stored Mollie/Ponto credential — never touches this host's disk.
+# The archive is encrypted inside the container before it is written out, so it
+# never touches this host's disk in the clear. It bundles the site's
+# site_config_backup.json, which carries encryption_key and db_password — the
+# key that decrypts every stored Mollie/Ponto credential.
 Description=NixFact daily backup
 Requires=docker.service
 After=docker.service

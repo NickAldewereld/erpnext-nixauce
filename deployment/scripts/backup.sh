@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 # NixFact backup script.
 #
-# Backups contain the full DB dump *and* common_site_config.json (which
-# stores Frappe's encryption_key, used to decrypt every Mollie / Ponto
-# password at rest). Treating these as plaintext is a privacy disaster.
+# An archive holds the full DB dump plus bench's own site_config_backup.json,
+# which carries the site's encryption_key and db_password. The encryption_key
+# decrypts every Mollie / Ponto credential stored at rest, so treating an
+# archive as plaintext is a privacy disaster.
+#
+# It is the per-site site_config.json that holds the key — not
+# common_site_config.json, which this script also bundles but which contains
+# only db_host, redis URLs and ports. This header used to name the wrong file;
+# verified against a real archive on 2026-07-16. The distinction matters
+# because the wrong version invites the conclusion that encryption is optional.
 #
 # Modes (set NIXFACT_BACKUP_ENCRYPTION):
 #   age   — pipe through age -r "$NIXFACT_AGE_RECIPIENT" (recommended)
