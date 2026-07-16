@@ -7,7 +7,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from nixfact_integration.doctype.nixfact_offerte.nixfact_offerte import (
+from nixfact_integration.nixfact_integration.doctype.nixfact_offerte.nixfact_offerte import (
     NixFactOfferte,
 )
 
