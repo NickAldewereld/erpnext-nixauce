@@ -16,10 +16,23 @@ if [[ ! -d "sites/${SITE}" ]]; then
         --db-root-password "${DB_ROOT_PASSWORD}" \
         --admin-password "${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set for first init}" \
         --install-app erpnext
-    bench --site "${SITE}" install-app nixfact_integration
 else
     echo "Site ${SITE} already exists — skipping creation."
 fi
+
+# Assert the apps on every run, not only when the site is created. An existing
+# site is not the same as a site with the apps installed: if a first run dies
+# between new-site and install-app, the site survives and every later run would
+# take the skip branch and never install anything.
+installed="$(bench --site "${SITE}" list-apps 2>/dev/null | awk '{print $1}')"
+for app in erpnext nixfact_integration; do
+    if grep -qx "${app}" <<<"${installed}"; then
+        echo "App ${app} already installed on ${SITE}."
+    else
+        echo "Installing ${app} on ${SITE}..."
+        bench --site "${SITE}" install-app "${app}"
+    fi
+done
 
 bench use "${SITE}"
 bench --site "${SITE}" enable-scheduler || true
