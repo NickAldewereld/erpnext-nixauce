@@ -109,11 +109,27 @@ services:
       REDIS_CACHE: redis://:${REDIS_PASSWORD}@redis-cache:6379
       REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
       SITE_NAME: ${SITE_NAME:?SITE_NAME must be set}
+      # Public half of the backup key. The private half never reaches this host:
+      # it lives in /root/.secrets on the Proxmox node. age needs only the
+      # recipient to encrypt, so a compromise here cannot decrypt old backups.
+      NIXFACT_AGE_RECIPIENT: ${NIXFACT_AGE_RECIPIENT:-}
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
       - logs_data:/home/frappe/frappe-bench/logs
+      # Backups land straight on the HDD-backed bind-mount, already encrypted,
+      # where borgmatic on CT200 picks them up. See deployment/systemd/.
+      - ${BACKUP_DIR:-/mnt/nixfact/backups}:/backups
     ports:
       - "${BIND_HOST:-127.0.0.1}:${HTTP_PORT:-8080}:8000"
+    # Send the site's Host header: Frappe resolves the site from Host, and a
+    # bare 127.0.0.1 matches no site (404). Declared here rather than in the
+    # image because worker and scheduler share that image and never serve HTTP.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"Host: ${SITE_NAME}\" http://127.0.0.1:8000/api/method/ping || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 5
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
     mem_limit: 1500m
@@ -134,6 +150,14 @@ services:
       REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
+    # Asks RQ whether this container's worker still checks in — see the script.
+    # start_period covers bench startup before the worker registers itself.
+    healthcheck:
+      test: ["CMD", "/healthcheck-worker.sh"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
     mem_limit: 768m
@@ -153,6 +177,14 @@ services:
       REDIS_QUEUE: redis://:${REDIS_PASSWORD}@redis-queue:6379
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
+    # Deliberately no healthcheck. `bench schedule` is a bare
+    # `while True: sleep(tick); enqueue_events_for_all_sites()` with no
+    # heartbeat to probe, and Frappe's own is_schduler_process_running() says of
+    # its flock check: "We can't determine if process is stuck somewhere."
+    # Death is already covered — tini exits with the loop and restart:
+    # unless-stopped brings it back. A probe that claims more than that is the
+    # exact failure this stack just removed. "Is the scheduler enqueueing?"
+    # belongs in monitoring, watching Scheduled Job Type.last_execution.
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
     mem_limit: 256m
