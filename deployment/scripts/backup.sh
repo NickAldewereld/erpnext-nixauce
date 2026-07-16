@@ -29,22 +29,28 @@ echo "=== NixFact Backup — ${TIMESTAMP} ==="
 # --- DB + files via bench ---
 cd "${BENCH_DIR}"
 echo "Dumping database + files..."
-backup_output="$(bench --site all backup --with-files --compress)"
+# Tell bench where to write instead of working out where it wrote.
+#
+# This previously ran the dump and then parsed bench's summary for paths, with
+# a datestamp glob as fallback. It never produced a single backup. bench prints
+#   Database: /path/to/dump.sql.gz 1.1MiB
+# — size last — while the grep anchored the extension at end of line, so it
+# matched nothing and returned 1. Under `set -o pipefail` that killed the
+# script before the fallback could run, and the EXIT trap wiped the staging
+# dir on the way out, leaving no trace beyond a failed unit. (Had the grep
+# matched, `awk '{print $NF}'` would have yielded "1.1MiB" rather than a path.)
+#
+# The lesson is not "fix the regex": bench's summary is a human-readable
+# display format, not an interface, and parsing it would break again on the
+# next upstream wording change. --backup-path is the interface.
+bench --site all backup --with-files --compress --backup-path "${STAGING_DIR}"
 
-# bench prints absolute paths; fish them out.
-echo "${backup_output}" | grep -E 'sql\.gz$|files\.tar$|files\.tar\.gz$|private-files\.tar$' | \
-    awk '{print $NF}' | while read -r f; do
-        if [[ -f "$f" ]]; then
-            cp -- "$f" "${STAGING_DIR}/"
-        fi
-    done
-
-# Fallback: glob match if grep above didn't catch anything (older bench).
-shopt -s nullglob
-for f in "${BENCH_DIR}"/sites/*/private/backups/*"$(date +%Y%m%d)"*; do
-    cp -n -- "$f" "${STAGING_DIR}/"
-done
-shopt -u nullglob
+# Never trust a zero exit code alone — verify the artefacts exist. A silent
+# empty backup is the failure mode that matters here.
+if ! compgen -G "${STAGING_DIR}/*" >/dev/null; then
+    echo "bench exited 0 but wrote nothing to ${STAGING_DIR}" >&2
+    exit 1
+fi
 
 # --- Site config (contains encryption_key — encrypt mode is mandatory) ---
 echo "Including common_site_config.json..."
