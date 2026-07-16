@@ -14,6 +14,13 @@ ARG PYTHON_IMAGE=python:3.14-slim-bookworm
 # version-17 is cut. Override at build time with --build-arg if needed.
 ARG FRAPPE_BRANCH=develop
 ARG ERPNEXT_BRANCH=develop
+# A branch name is not a version. Tracking `develop` by name means every rebuild
+# silently picks up whatever upstream happened to push, so an image can neither
+# be reproduced nor rolled back — on an unreleased line that is a live hazard,
+# not a theoretical one. bench only understands branches, so we clone the branch
+# and then check out these exact commits. Bump them deliberately; never drift.
+ARG FRAPPE_REF=6e3d89f7ffc3e986995c5604064101b75bf4c034
+ARG ERPNEXT_REF=ac68db3fa6cdfcaa900a856568d977e8e1de2356
 # Frappe develop requires Node >=24.
 ARG NODE_MAJOR=24
 
@@ -24,6 +31,8 @@ FROM ${PYTHON_IMAGE} AS builder
 
 ARG FRAPPE_BRANCH
 ARG ERPNEXT_BRANCH
+ARG FRAPPE_REF
+ARG ERPNEXT_REF
 ARG NODE_MAJOR
 
 ENV PYTHONUNBUFFERED=1 \
@@ -61,7 +70,18 @@ RUN bench init frappe-bench \
 
 WORKDIR /home/frappe/frappe-bench
 
+# Pin to the exact commits. bench clones shallow and names the remote
+# `upstream`, so fetch the bare SHA (GitHub serves these) rather than
+# unshallowing the entire history just to reach one commit.
+RUN cd apps/frappe \
+    && git fetch --depth=1 upstream ${FRAPPE_REF} \
+    && git checkout --detach FETCH_HEAD
+
 RUN bench get-app erpnext --branch ${ERPNEXT_BRANCH}
+
+RUN cd apps/erpnext \
+    && git fetch --depth=1 upstream ${ERPNEXT_REF} \
+    && git checkout --detach FETCH_HEAD
 
 COPY --chown=frappe:frappe ./nixfact_integration apps/nixfact_integration
 
@@ -103,6 +123,7 @@ RUN apt-get update \
        redis-tools \
        curl \
        tini \
+       age \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -ms /bin/bash frappe
@@ -120,13 +141,20 @@ COPY --chown=frappe:frappe deployment/docker/init.sh /init.sh
 # sidecar in this stack). Lives in the bench root so gunicorn --pythonpath finds
 # it; it can't go under sites/ (that path is a mounted volume at runtime).
 COPY --chown=frappe:frappe deployment/docker/nixfact_wsgi.py /home/frappe/frappe-bench/nixfact_wsgi.py
+COPY --chown=frappe:frappe deployment/docker/healthcheck-worker.sh /healthcheck-worker.sh
+# The backup runs where bench lives: inside this image, invoked from the host's
+# systemd timer via `docker compose exec`. age is installed above so the archive
+# is encrypted before it ever touches the host's disk.
+COPY --chown=frappe:frappe deployment/scripts/backup.sh /backup.sh
 
 EXPOSE 8000
 
-# Send the site's Host header: Frappe resolves the site from Host and a bare
-# 127.0.0.1 has no matching site (404). SITE_NAME is provided via compose env.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=5 \
-    CMD curl -fsS -H "Host: ${SITE_NAME:-localhost}" http://127.0.0.1:8000/api/method/ping || exit 1
+# NO HEALTHCHECK here on purpose. This image serves three roles (web, worker,
+# scheduler) and a baked-in probe applies to all of them, so any check written
+# for one lies about the other two. It used to curl 127.0.0.1:8000 — correct for
+# web, meaningless for worker and scheduler, which never listen on a port and
+# consequently sat "unhealthy" forever while working fine. Each role declares
+# its own check in docker-compose.yml, next to the CMD that defines that role.
 
 # Use tini as PID 1 for proper signal handling; entrypoint.sh wires
 # DB/Redis env into common_site_config.json before exec'ing the CMD.
