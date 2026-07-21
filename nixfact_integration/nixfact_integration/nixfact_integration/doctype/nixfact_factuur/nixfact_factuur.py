@@ -9,7 +9,32 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt
 
+from nixfact_integration.utils.btw import code_voor_categorie, regel_excl, totalen
 from nixfact_integration.utils.numbering import set_nummer_for_doc
+
+
+def regels_als_dicts(doc) -> list[dict]:
+    """Zet de regels van een factuur om naar rekendicts voor utils.btw.
+
+    Schrijft en passant het regeltotaal terug op elke regel, zodat de
+    gebruiker het in de grid ziet.
+    """
+    resultaat = []
+    for regel in getattr(doc, "regels", None) or []:
+        excl = regel_excl(regel.aantal, regel.eenheidsprijs)
+        regel.regel_excl = excl
+        resultaat.append(
+            {
+                "omschrijving": regel.omschrijving,
+                "aantal": float(regel.aantal or 0),
+                "eenheidsprijs": float(regel.eenheidsprijs or 0),
+                "excl": excl,
+                "btw_percentage": float(regel.btw_percentage or 0),
+                "btw_code": code_voor_categorie(regel.btw_categorie),
+            }
+        )
+    return resultaat
+
 
 # Allowed status transitions. Anything not listed is blocked at validate time.
 _ALLOWED_TRANSITIONS: dict[str, set[str]] = {
@@ -38,13 +63,19 @@ class NixFactFactuur(Document):
         self._validate_status_transition()
 
     def bereken_bedragen(self) -> None:
-        """Compute BTW + totalen with currency-safe rounding."""
-        excl = flt(self.bedrag_excl_btw, 2) if self.bedrag_excl_btw else 0
-        pct = flt(self.btw_percentage or 0, 2)
-        self.btw_bedrag = flt(excl * pct / 100, 2)
-        self.bedrag_incl_btw = flt(excl + self.btw_bedrag, 2)
+        """Compute BTW + totalen uit de regels, currency-safe."""
+        regels = regels_als_dicts(self)
+        som = totalen(regels)
+        self.bedrag_excl_btw = som["excl"]
+        self.btw_bedrag = som["btw"]
+        self.bedrag_incl_btw = som["incl"]
         self.openstaand_bedrag = flt(
-            self.bedrag_incl_btw - flt(self.betaald_bedrag or 0, 2), 2
+            som["incl"] - flt(self.betaald_bedrag or 0, 2), 2
+        )
+        # btw_percentage blijft als samenvatting staan: het hoogste
+        # gehanteerde tarief. Puur informatief; UBL gebruikt de groepen.
+        self.btw_percentage = max(
+            (r["btw_percentage"] for r in regels), default=0
         )
 
     def set_vervaldatum(self) -> None:
