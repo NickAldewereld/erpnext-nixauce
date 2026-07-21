@@ -83,8 +83,8 @@ def build_invoice_xml(factuur: UBLFactuur) -> str:
 
     _add_cbc(invoice, "CustomizationID", CUSTOMIZATION_ID)
     _add_cbc(invoice, "ProfileID", PROFILE_ID)
-    _add_cbc(invoice, "ID", factuur.nummer)
-    _add_cbc(invoice, "IssueDate", factuur.factuurdatum)
+    _add_cbc_required(invoice, "ID", factuur.nummer)
+    _add_cbc_required(invoice, "IssueDate", factuur.factuurdatum)
     if factuur.vervaldatum:
         _add_cbc(invoice, "DueDate", factuur.vervaldatum)
     _add_cbc(invoice, "InvoiceTypeCode", "380")

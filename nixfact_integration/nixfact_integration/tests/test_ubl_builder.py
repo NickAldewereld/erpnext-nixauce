@@ -219,6 +219,22 @@ class TestRobuustheid(unittest.TestCase):
             "100.00",
         )
 
+    def test_geen_deelbetaling_geeft_geen_prepaid_amount(self):
+        factuur = _factuur([UBLRegel("A", 1, 100.00, 100.00, 21, "S")])
+        doc = _xml(factuur)
+        self.assertIsNone(
+            doc.find("cac:LegalMonetaryTotal/cbc:PrepaidAmount", NS)
+        )
+
+    def test_id_en_issue_date_altijd_aanwezig(self):
+        doc = _xml(_factuur([UBLRegel("A", 1, 100.00, 100.00, 21, "S")]))
+        id_el = doc.find("cbc:ID", NS)
+        issue_date_el = doc.find("cbc:IssueDate", NS)
+        self.assertIsNotNone(id_el)
+        self.assertIsNotNone(issue_date_el)
+        self.assertTrue(id_el.text)
+        self.assertTrue(issue_date_el.text)
+
 
 if __name__ == "__main__":
     unittest.main()
