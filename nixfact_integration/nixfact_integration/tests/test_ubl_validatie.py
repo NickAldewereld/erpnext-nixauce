@@ -109,6 +109,13 @@ class TestBtwRegels(unittest.TestCase):
         f.regels = [UBLRegel("Advies", 1, 100.00, 100.00, 0, "AE")]
         self.assertIn("BR-AE-09", _codes(valideer(f)))
 
+    def test_onbekende_categorie_en_fout_totaal_geeft_beide_fouten(self):
+        f = _geldige_factuur()
+        f.regels = [UBLRegel("Advies", 2, 100.00, 999.00, 21, "X")]
+        codes = _codes(valideer(f))
+        self.assertIn("BR-CL-01", codes)
+        self.assertIn("BR-CO-04", codes)
+
 
 class TestRegelInhoud(unittest.TestCase):
 

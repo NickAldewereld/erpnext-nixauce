@@ -84,13 +84,6 @@ def _controleer_regels(factuur: UBLFactuur) -> list[Fout]:
                 Fout("BR-25", f"Regel {nummer} heeft geen omschrijving.")
             )
 
-        if regel.btw_code not in GELDIGE_CODES:
-            fouten.append(
-                Fout("BR-CL-01", f"Regel {nummer} heeft een onbekende "
-                     f"btw-categorie ({regel.btw_code}).")
-            )
-            continue
-
         verwacht = round(float(regel.aantal) * float(regel.eenheidsprijs), 2)
         if abs(verwacht - float(regel.excl)) > 0.01:
             fouten.append(
@@ -98,6 +91,13 @@ def _controleer_regels(factuur: UBLFactuur) -> list[Fout]:
                      f"({regel.excl:.2f}) klopt niet met aantal x prijs "
                      f"({verwacht:.2f}).")
             )
+
+        if regel.btw_code not in GELDIGE_CODES:
+            fouten.append(
+                Fout("BR-CL-01", f"Regel {nummer} heeft een onbekende "
+                     f"btw-categorie ({regel.btw_code}).")
+            )
+            continue
 
         pct = float(regel.btw_percentage or 0)
         if regel.btw_code in NUL_CATEGORIEEN and pct != 0:
