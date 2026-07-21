@@ -46,3 +46,24 @@ def attach_ubl_to_factuur(factuur_name: str) -> dict:
     file_url = generate_and_attach_ubl(factuur_name)
     factuurnummer = frappe.db.get_value("NixFact Factuur", factuur_name, "factuurnummer")
     return {"file_url": file_url, "factuurnummer": factuurnummer}
+
+
+@frappe.whitelist()
+def valideer_factuur(factuur_name: str) -> dict:
+    """Valideer een factuur zonder hem te versturen.
+
+    Permission: caller moet ``read`` hebben op deze factuur.
+    """
+    if not frappe.has_permission(
+        "NixFact Factuur", ptype="read", doc=factuur_name, throw=False
+    ):
+        raise frappe.PermissionError(_("Niet toegestaan."))
+
+    from nixfact_integration.utils.ubl_generator import factuur_naar_model
+    from nixfact_integration.utils.ubl_validatie import valideer
+
+    fouten = valideer(factuur_naar_model(factuur_name))
+    return {
+        "geldig": not fouten,
+        "fouten": [{"regel": f.regel, "melding": f.melding} for f in fouten],
+    }

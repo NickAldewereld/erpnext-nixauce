@@ -6,7 +6,7 @@
 
 import unittest
 
-from nixfact_integration.utils.ubl_generator import (
+from nixfact_integration.utils.ubl_builder import (
 	NS_INVOICE,
 	NS_CAC,
 	NS_CBC,
@@ -41,12 +41,12 @@ class TestUBLHelpers(unittest.TestCase):
 	"""Test XML builder helper functions."""
 
 	def test_cac_tag(self):
-		from nixfact_integration.utils.ubl_generator import _cac
+		from nixfact_integration.utils.ubl_builder import _cac
 		tag = _cac("Party")
 		self.assertEqual(tag, f"{{{NS_CAC}}}Party")
 
 	def test_cbc_tag(self):
-		from nixfact_integration.utils.ubl_generator import _cbc
+		from nixfact_integration.utils.ubl_builder import _cbc
 		tag = _cbc("ID")
 		self.assertEqual(tag, f"{{{NS_CBC}}}ID")
 

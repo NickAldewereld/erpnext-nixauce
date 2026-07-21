@@ -14,7 +14,13 @@ app_license = "AGPL-3.0-or-later"
 # app_include_js = "/assets/nixfact_integration/js/nixfact.js"
 
 # DocType events
-# doc_events = {}
+doc_events = {
+	"NixFact Factuur": {
+		"before_save": (
+			"nixfact_integration.utils.ubl_generator.valideer_factuur_doc"
+		),
+	},
+}
 
 # Scheduled tasks
 scheduler_events = {
