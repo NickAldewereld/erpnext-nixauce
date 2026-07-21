@@ -5,9 +5,10 @@
 """Tests for subscription date calculations."""
 
 import unittest
+import types
 from datetime import date
 
-from nixfact_integration.tasks import _volgende_datum
+from nixfact_integration.tasks import _abonnement_regel, _volgende_datum
 
 
 class TestVolgendeDatum(unittest.TestCase):
@@ -38,6 +39,36 @@ class TestVolgendeDatum(unittest.TestCase):
 	def test_unknown_frequency_defaults_monthly(self):
 		result = _volgende_datum(date(2026, 1, 1), "Onbekend")
 		self.assertEqual(result, date(2026, 2, 1))
+
+
+class TestAbonnementRegel(unittest.TestCase):
+	"""Test mapping an abonnement to a single NixFact Factuur Regel dict."""
+
+	def _abo(self, **overrides):
+		defaults = dict(
+			name="ABO-0001",
+			omschrijving="Hosting pakket",
+			bedrag_excl_btw=100.0,
+			btw_percentage=21,
+		)
+		defaults.update(overrides)
+		return types.SimpleNamespace(**defaults)
+
+	def test_standaard_tarief(self):
+		regel = _abonnement_regel(self._abo())
+		self.assertEqual(regel["btw_categorie"], "Standaard")
+		self.assertEqual(regel["eenheidsprijs"], 100.0)
+		self.assertEqual(regel["aantal"], 1)
+		self.assertEqual(regel["omschrijving"], "Hosting pakket")
+		self.assertEqual(regel["btw_percentage"], 21)
+
+	def test_nultarief(self):
+		regel = _abonnement_regel(self._abo(btw_percentage=0))
+		self.assertEqual(regel["btw_categorie"], "Nultarief")
+
+	def test_lege_omschrijving_valt_terug_op_naam(self):
+		regel = _abonnement_regel(self._abo(omschrijving="", name="ABO-0042"))
+		self.assertEqual(regel["omschrijving"], "Abonnement ABO-0042")
 
 
 if __name__ == "__main__":

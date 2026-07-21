@@ -28,6 +28,11 @@ def maak_demo_factuur() -> str:
             }
         ).insert(ignore_permissions=True)
 
+    bestaand = frappe.db.exists("NixFact Factuur", {"referentie": "DEMO-2026"})
+    if bestaand:
+        print(f"[nixfact] demo-factuur {bestaand} bestaat al, sla aanmaken over")
+        return bestaand
+
     factuur = frappe.get_doc(
         {
             "doctype": "NixFact Factuur",

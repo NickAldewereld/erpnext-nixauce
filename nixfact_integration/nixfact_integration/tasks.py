@@ -152,6 +152,22 @@ def _send_reminder(factuur_name: str, template: str, new_status: str) -> bool:
 # --------------------------------------------------------------------------
 
 
+def _abonnement_regel(abo) -> dict:
+    """Map an abonnement (row/doc with attribute access) to one factuurregel.
+
+    Pure function — no frappe calls — so it can be unit-tested against the
+    stubbed frappe used by the pytest suite.
+    """
+    btw_percentage = flt(abo.btw_percentage, 2)
+    return {
+        "omschrijving": abo.omschrijving or f"Abonnement {abo.name}",
+        "aantal": 1,
+        "eenheidsprijs": flt(abo.bedrag_excl_btw, 2),
+        "btw_categorie": "Standaard" if btw_percentage > 0 else "Nultarief",
+        "btw_percentage": btw_percentage,
+    }
+
+
 def genereer_abonnement_facturen() -> None:
     """Generate invoices from active subscriptions whose period is due.
 
@@ -209,11 +225,10 @@ def genereer_abonnement_facturen() -> None:
                     "doctype": "NixFact Factuur",
                     "klant": abo.klant,
                     "factuur_datum": volgende,
-                    "bedrag_excl_btw": flt(abo.bedrag_excl_btw, 2),
-                    "btw_percentage": flt(abo.btw_percentage, 2),
                     "referentie": abo.omschrijving,
                     "abonnement": abo.name,
                     "status": "Verstuurd",
+                    "regels": [_abonnement_regel(abo)],
                 }
             )
             factuur.insert(ignore_permissions=True)
