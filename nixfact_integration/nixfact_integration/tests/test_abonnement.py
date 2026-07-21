@@ -8,7 +8,12 @@ import unittest
 import types
 from datetime import date
 
-from nixfact_integration.tasks import _abonnement_regel, _volgende_datum
+from nixfact_integration.tasks import (
+	_abonnement_regel,
+	_mislukking_reden,
+	_vat_mislukkingen,
+	_volgende_datum,
+)
 
 
 class TestVolgendeDatum(unittest.TestCase):
@@ -69,6 +74,40 @@ class TestAbonnementRegel(unittest.TestCase):
 	def test_lege_omschrijving_valt_terug_op_naam(self):
 		regel = _abonnement_regel(self._abo(omschrijving="", name="ABO-0042"))
 		self.assertEqual(regel["omschrijving"], "Abonnement ABO-0042")
+
+
+class TestMislukkingMelding(unittest.TestCase):
+	"""Test failure-visibility helpers for the abonnement-facturen cron."""
+
+	def test_mislukking_reden_strips_html(self):
+		exc = Exception(
+			"Deze factuur voldoet nog niet aan de e-facturatie-eisen:"
+			"<ul><li>Het land van de klant ontbreekt in het adres.</li></ul>"
+		)
+		reden = _mislukking_reden(exc)
+		self.assertIn("Het land van de klant ontbreekt", reden)
+		self.assertNotIn("<", reden)
+		self.assertNotIn(">", reden)
+
+	def test_mislukking_reden_plain_exception(self):
+		reden = _mislukking_reden(ValueError("iets kapot"))
+		self.assertEqual(reden, "iets kapot")
+
+	def test_vat_mislukkingen_bevat_alle_regels(self):
+		mislukt = [
+			{"abonnement": "ABO-0001", "klant": "Klant A", "reden": "reden een"},
+			{"abonnement": "ABO-0002", "klant": "Klant B", "reden": "reden twee"},
+		]
+		samenvatting = _vat_mislukkingen(mislukt)
+		self.assertIn("ABO-0001", samenvatting)
+		self.assertIn("ABO-0002", samenvatting)
+		self.assertIn("Klant A", samenvatting)
+		self.assertIn("Klant B", samenvatting)
+		self.assertIn("2", samenvatting)
+
+	def test_vat_mislukkingen_lege_lijst(self):
+		samenvatting = _vat_mislukkingen([])
+		self.assertEqual(samenvatting, "0 abonnement(en) niet gefactureerd:")
 
 
 if __name__ == "__main__":

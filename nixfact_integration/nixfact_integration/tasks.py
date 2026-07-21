@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import re
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, add_months, flt, getdate, nowdate
@@ -168,6 +170,35 @@ def _abonnement_regel(abo) -> dict:
     }
 
 
+def _mislukking_reden(exc) -> str:
+    """Turn an exception into a short, human-readable Dutch reason.
+
+    The e-facturatie ``before_save`` validation hook raises messages
+    containing HTML (``<ul><li>...</li></ul>``); strip the markup so the
+    reason reads as plain text in logs and summaries. Pure function — no
+    frappe calls — so it can be unit-tested directly.
+    """
+    tekst = re.sub(r"<[^>]+>", " ", str(exc))
+    return re.sub(r"\s+", " ", tekst).strip()
+
+
+def _vat_mislukkingen(mislukt: list[dict]) -> str:
+    """Format a multi-line Dutch summary of failed abonnement facturen.
+
+    Pure function — no frappe calls — so it can be unit-tested directly.
+    """
+    regels = [f"{len(mislukt)} abonnement(en) niet gefactureerd:"]
+    for item in mislukt:
+        regels.append(
+            "- {abonnement} ({klant}): {reden}".format(
+                abonnement=item.get("abonnement"),
+                klant=item.get("klant"),
+                reden=item.get("reden"),
+            )
+        )
+    return "\n".join(regels)
+
+
 def genereer_abonnement_facturen() -> None:
     """Generate invoices from active subscriptions whose period is due.
 
@@ -207,6 +238,7 @@ def genereer_abonnement_facturen() -> None:
     )
 
     created = 0
+    mislukt = []
     for abo in abonnementen:
         savepoint = f"abo_{abo.name.replace('-', '_')}"
         try:
@@ -238,17 +270,33 @@ def genereer_abonnement_facturen() -> None:
             abo_doc.volgende_factuur_datum = _volgende_datum(volgende, abo.frequentie)
             abo_doc.save(ignore_permissions=True)
             created += 1
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             frappe.db.rollback(save_point=savepoint)
             frappe.log_error(
                 title="Abonnement factuur fout",
                 message=frappe.get_traceback(),
             )
+            mislukt.append(
+                {
+                    "abonnement": abo.name,
+                    "klant": abo.klant,
+                    "reden": _mislukking_reden(exc),
+                }
+            )
+
+    if mislukt:
+        samenvatting = _vat_mislukkingen(mislukt)
+        _logger().warning(samenvatting)
+        frappe.log_error(
+            title="Abonnementen niet gefactureerd",
+            message=samenvatting,
+        )
 
     frappe.db.commit()
     _logger().info(
-        "genereer_abonnement_facturen: %s facturen gemaakt uit %s kandidaten",
+        "genereer_abonnement_facturen: %s gemaakt, %s mislukt, uit %s kandidaten",
         created,
+        len(mislukt),
         len(abonnementen),
     )
 
