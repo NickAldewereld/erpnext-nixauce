@@ -42,15 +42,17 @@ def _rapporteer(
 
 def backfill_debiteuren(client: WeFactClient) -> None:
     verwerkt, mislukt = 0, []
-    for wf in client.list_all("debtor"):
+    for kop in client.list_all("debtor"):
+        code = kop.get("DebtorCode") or ""
         try:
+            # De debiteurenlijst is schraal (geen adres/BTW-nummer); die
+            # zitten alleen in het detail, dus per debiteur ophalen.
+            wf = client.show("debtor", code, "DebtorCode")
             upsert.upsert_customer(debtor_to_customer(wf), debtor_to_address(wf))
             verwerkt += 1
         except Exception as exc:  # noqa: BLE001
             frappe.db.rollback()
-            mislukt.append(
-                Mislukking("debiteur", str(wf.get("DebtorCode") or ""), str(exc))
-            )
+            mislukt.append(Mislukking("debiteur", code, str(exc)))
     _rapporteer(verwerkt, mislukt, "debiteuren")
 
 
