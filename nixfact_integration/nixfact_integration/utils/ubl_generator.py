@@ -118,6 +118,13 @@ def valideer_factuur_doc(doc, method=None) -> None:
     Draait alleen bij de overgang naar 'Verstuurd' — een concept mag
     onvolledig zijn, dat is het punt van een concept.
     """
+    # Schaduwmodus: WeFact-eigendom wordt nooit door NIXFact gevalideerd
+    # of verstuurd — historische administratie, nooit via Peppol gegaan.
+    if doc.get("wefact_identifier") if hasattr(doc, "get") else getattr(
+        doc, "wefact_identifier", None
+    ):
+        return
+
     if doc.status != "Verstuurd":
         return
     vorige = doc.get_doc_before_save()
