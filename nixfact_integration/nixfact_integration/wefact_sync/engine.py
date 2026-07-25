@@ -62,6 +62,11 @@ def backfill_facturen(client: WeFactClient, company: str) -> None:
         try:
             detail = client.show("invoice", code, "InvoiceCode")
             factuur = invoice_to_factuur(detail)
+            if factuur.get("is_creditnota"):
+                waarschuwingen.append(
+                    f"factuur {code}: creditnota overgeslagen (afhandeling volgt in vervolgfase)"
+                )
+                continue
             upsert.upsert_factuur(factuur, company)
             verwerkt += 1
             if factuur.get("onbekende_status"):

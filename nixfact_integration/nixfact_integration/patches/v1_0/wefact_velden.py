@@ -2,11 +2,11 @@
 # License: AGPL-3.0-or-later (https://www.gnu.org/licenses/agpl-3.0.html)
 # For commercial licensing, contact: nick@nixpay.nl
 
-"""Voeg WeFact-koppelvelden en -config toe.
+"""Voeg WeFact-koppelvelden toe aan Customer.
 
 `custom_field_specs` is puur zodat de vorm in CI te testen is; `execute`
-past ze toe via de Frappe custom-field-API en voegt de config-velden aan
-NixFact Instellingen toe.
+past ze toe via de Frappe custom-field-API. De config-velden op NixFact
+Instellingen zitten in de doctype-JSON en syncen vanzelf mee bij migrate.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ def custom_field_specs() -> dict:
 
 
 def execute() -> None:
-    """Maak custom fields op Customer en config-velden op Instellingen."""
+    """Maak custom fields op Customer."""
     import frappe
     from frappe.custom.doctype.custom_field.custom_field import (
         create_custom_fields,

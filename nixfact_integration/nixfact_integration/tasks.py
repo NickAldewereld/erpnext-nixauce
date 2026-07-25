@@ -41,7 +41,7 @@ def verstuur_herinneringen() -> None:
             "herinnering_verstuurd": 0,
             "status": "Verstuurd",
             "openstaand_bedrag": [">", 0],
-            "wefact_identifier": ["in", [None, ""]],
+            "wefact_identifier": ["is", "not set"],
         },
         fields=["name"],
     )
@@ -74,7 +74,7 @@ def verstuur_aanmaningen() -> None:
             "herinnering_datum": ["<=", grens],
             "status": "Herinnering verstuurd",
             "openstaand_bedrag": [">", 0],
-            "wefact_identifier": ["in", [None, ""]],
+            "wefact_identifier": ["is", "not set"],
         },
         fields=["name"],
     )

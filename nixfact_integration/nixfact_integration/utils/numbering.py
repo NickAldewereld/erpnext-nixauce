@@ -146,18 +146,18 @@ def _format_nummer(prefix: str, counter: int, use_year: bool, use_month: bool) -
 
 def set_nummer_for_doc(doc, doctype: str) -> None:
     """Set the auto-generated number on a document. Call from autoname()."""
-    # Import-bewust: als er al een nummer staat (bijv. de WeFact-code bij
-    # import), behoud dat en genereer geen nieuw nummer.
-    if doctype in DOCTYPE_NUMBERING:
-        bestaand = getattr(doc, DOCTYPE_NUMBERING[doctype][4], None)
-        if bestaand:
-            doc.name = bestaand
-            return
-
     if doctype not in DOCTYPE_NUMBERING:
         frappe.throw(_("Nummering niet geconfigureerd voor {0}").format(doctype))
 
     nummer_field = DOCTYPE_NUMBERING[doctype][4]
+
+    # Import-bewust: als er al een nummer staat (bijv. de WeFact-code bij
+    # import), behoud dat en genereer geen nieuw nummer.
+    bestaand = getattr(doc, nummer_field, None)
+    if bestaand:
+        doc.name = bestaand
+        return
+
     nummer = get_next_nummer(doctype)
     setattr(doc, nummer_field, nummer)
     doc.name = nummer
