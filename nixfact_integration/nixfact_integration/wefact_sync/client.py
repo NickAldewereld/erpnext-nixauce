@@ -36,12 +36,24 @@ class WeFactClient:
         api_key: str,
         endpoint: str = DEFAULT_ENDPOINT,
         transport: Callable | None = None,
+        min_interval: float = 0.4,
     ) -> None:
         if not api_key:
             raise ValueError("WeFact API-key ontbreekt.")
         self.api_key = api_key
         self.endpoint = endpoint
         self._transport = transport or _default_transport
+        # Minimale tijd tussen calls; WeFact firewallt het IP bij een burst.
+        self._min_interval = min_interval
+        self._last = 0.0
+
+    def _pace(self) -> None:
+        if not self._min_interval:
+            return
+        wacht = self._min_interval - (time.monotonic() - self._last)
+        if wacht > 0:
+            time.sleep(wacht)
+        self._last = time.monotonic()
 
     def request(self, controller: str, action: str, params: dict | None = None) -> dict:
         body = {
@@ -51,6 +63,8 @@ class WeFactClient:
         }
         if params:
             body.update(params)
+
+        self._pace()
 
         laatste = ""
         for poging in range(_MAX_RETRIES):

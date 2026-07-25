@@ -41,7 +41,7 @@ class TestRequest(unittest.TestCase):
         from nixfact_integration.wefact_sync.client import WeFactClient
 
         transport = _FakeTransport(responses)
-        return WeFactClient(api_key="KEY", transport=transport), transport
+        return WeFactClient(api_key="KEY", transport=transport, min_interval=0), transport
 
     def test_api_key_en_controller_in_body(self):
         client, t = self._client([{"status": "success"}])
@@ -96,7 +96,7 @@ class TestRequest(unittest.TestCase):
                 return _FakeResponse({"status": "success", "debtors": []})
 
         t = _T()
-        client = WeFactClient(api_key="K", transport=t)
+        client = WeFactClient(api_key="K", transport=t, min_interval=0)
         with mock.patch("nixfact_integration.wefact_sync.client.time.sleep"):
             client.request("debtor", "list")
         self.assertEqual(t.n, 2)  # eerste niet-JSON, tweede gelukt
