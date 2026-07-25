@@ -64,7 +64,12 @@
   "bankkoppeling_toestaan",
   "automatisch_matchen",
   "column_break_bank1",
-  "transacties_verwijderen"
+  "transacties_verwijderen",
+  "wefact_section",
+  "wefact_api_key",
+  "wefact_sync_enabled",
+  "wefact_cursor_debiteuren",
+  "wefact_cursor_facturen"
  ],
  "fields": [
   {
@@ -415,13 +420,18 @@
    "fieldname": "transacties_verwijderen",
    "fieldtype": "Check",
    "label": "Transacties verwijderen toestaan"
-  }
+  },
+  {"fieldname": "wefact_section", "fieldtype": "Section Break", "label": "WeFact-sync"},
+  {"fieldname": "wefact_api_key", "fieldtype": "Password", "label": "WeFact API-key"},
+  {"fieldname": "wefact_sync_enabled", "fieldtype": "Check", "label": "WeFact-sync actief", "default": 0},
+  {"fieldname": "wefact_cursor_debiteuren", "fieldtype": "Data", "label": "Cursor debiteuren", "read_only": 1},
+  {"fieldname": "wefact_cursor_facturen", "fieldtype": "Data", "label": "Cursor facturen", "read_only": 1}
  ],
  "hide_toolbar": 1,
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-05 12:00:00.000000",
+ "modified": "2026-07-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "NixFact Integration",
  "name": "NixFact Instellingen",

@@ -2,3 +2,4 @@
 
 [post_model_sync]
 nixfact_integration.patches.v1_0.factuur_regels_migratie
+nixfact_integration.patches.v1_0.wefact_velden
