@@ -16,6 +16,13 @@ class _FakeResponse:
         return self._payload
 
 
+class _BadJsonResponse:
+    status_code = 200
+
+    def json(self):
+        raise ValueError("Expecting value: line 1 column 1 (char 0)")
+
+
 class _FakeTransport:
     """Verzamelt requests en geeft vooraf bepaalde antwoorden terug."""
 
@@ -74,6 +81,25 @@ class TestRequest(unittest.TestCase):
         items = client.list_all("invoice")
         self.assertEqual(len(items), 3)
         self.assertEqual(len(t.calls), 1)
+
+    def test_niet_json_wordt_geretried(self):
+        from unittest import mock
+        from nixfact_integration.wefact_sync.client import WeFactClient
+
+        class _T:
+            def __init__(self):
+                self.n = 0
+            def __call__(self, url, json, timeout=None):
+                self.n += 1
+                if self.n == 1:
+                    return _BadJsonResponse()
+                return _FakeResponse({"status": "success", "debtors": []})
+
+        t = _T()
+        client = WeFactClient(api_key="K", transport=t)
+        with mock.patch("nixfact_integration.wefact_sync.client.time.sleep"):
+            client.request("debtor", "list")
+        self.assertEqual(t.n, 2)  # eerste niet-JSON, tweede gelukt
 
 
 if __name__ == "__main__":

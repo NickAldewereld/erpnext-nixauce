@@ -52,18 +52,31 @@ class WeFactClient:
         if params:
             body.update(params)
 
+        laatste = ""
         for poging in range(_MAX_RETRIES):
             resp = self._transport(self.endpoint, json=body, timeout=60)
-            if getattr(resp, "status_code", 200) == 429:
+            code = getattr(resp, "status_code", 200)
+            if code == 429 or code >= 500:
+                laatste = f"http {code}"
                 time.sleep(2**poging)  # exponentiële backoff
                 continue
-            data = resp.json()
+            try:
+                data = resp.json()
+            except Exception:  # noqa: BLE001
+                # Leeg/niet-JSON antwoord (throttling onder burst) — transient,
+                # dus backoff en opnieuw i.p.v. de factuur laten mislukken.
+                laatste = "niet-JSON antwoord"
+                time.sleep(2**poging)
+                continue
             if data.get("status") != "success":
                 raise WeFactError(
                     f"{controller}/{action}: {data.get('errors') or data}"
                 )
             return data
-        raise WeFactError(f"{controller}/{action}: rate-limit na {_MAX_RETRIES} pogingen")
+        raise WeFactError(
+            f"{controller}/{action}: geen geldig antwoord na {_MAX_RETRIES} "
+            f"pogingen ({laatste})"
+        )
 
     def list_all(
         self, controller: str, action: str = "list", params: dict | None = None
