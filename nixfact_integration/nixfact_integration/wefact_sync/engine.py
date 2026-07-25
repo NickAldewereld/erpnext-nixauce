@@ -28,10 +28,15 @@ def _client() -> WeFactClient:
     return WeFactClient(api_key=key)
 
 
-def _rapporteer(verwerkt: int, mislukt: list[Mislukking], soort: str) -> None:
-    tekst = vat_rapport(verwerkt, mislukt, soort)
+def _rapporteer(
+    verwerkt: int,
+    mislukt: list[Mislukking],
+    soort: str,
+    waarschuwingen: list[str] | None = None,
+) -> None:
+    tekst = vat_rapport(verwerkt, mislukt, soort, waarschuwingen)
     frappe.logger("nixfact", allow_site=True).warning(tekst)
-    if mislukt:
+    if mislukt or waarschuwingen:
         frappe.log_error(title=f"WeFact-import {soort}", message=tekst)
 
 
@@ -51,16 +56,22 @@ def backfill_debiteuren(client: WeFactClient) -> None:
 
 def backfill_facturen(client: WeFactClient, company: str) -> None:
     verwerkt, mislukt = 0, []
+    waarschuwingen: list[str] = []
     for kop in client.list_all("invoice"):
         code = kop.get("InvoiceCode") or ""
         try:
             detail = client.show("invoice", code, "InvoiceCode")
-            upsert.upsert_factuur(invoice_to_factuur(detail), company)
+            factuur = invoice_to_factuur(detail)
+            upsert.upsert_factuur(factuur, company)
             verwerkt += 1
+            if factuur.get("onbekende_status"):
+                waarschuwingen.append(
+                    f"factuur {code}: onbekende WeFact-status, geïmporteerd als Concept"
+                )
         except Exception as exc:  # noqa: BLE001
             frappe.db.rollback()
             mislukt.append(Mislukking("factuur", code, str(exc)))
-    _rapporteer(verwerkt, mislukt, "facturen")
+    _rapporteer(verwerkt, mislukt, "facturen", waarschuwingen)
 
 
 def volledige_backfill(alleen: str | None = None) -> None:

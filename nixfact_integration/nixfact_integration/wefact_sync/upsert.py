@@ -91,6 +91,8 @@ def upsert_factuur(factuur: dict, company: str) -> str:
         raise ValueError(
             f"Geen klant voor debiteurcode {factuur['wefact_debtor_code']}"
         )
+    if not factuur["factuur_datum"]:
+        raise ValueError(f"Factuur {factuur['factuurnummer']} heeft geen datum")
 
     kop = {
         "klant": klant,
