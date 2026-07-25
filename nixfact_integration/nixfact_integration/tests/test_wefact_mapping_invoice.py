@@ -92,5 +92,26 @@ class TestInvoiceToFactuur(unittest.TestCase):
         self.assertEqual(f["regels"], [])
 
 
+class TestStripHtml(unittest.TestCase):
+
+    def test_html_wordt_gestript(self):
+        from nixfact_integration.wefact_sync.mapping.invoice import strip_html
+        self.assertEqual(strip_html("<b>Advies</b> over <strong>Google</strong>"),
+                         "Advies over Google")
+
+    def test_witruimte_genormaliseerd(self):
+        from nixfact_integration.wefact_sync.mapping.invoice import strip_html
+        self.assertEqual(strip_html("regel1\n\n   regel2"), "regel1 regel2")
+
+    def test_lange_html_omschrijving_in_regel(self):
+        wf = _wf_factuur(InvoiceLines=[{
+            "Description": "<strong>Wij verzorgen</strong> als bureau een uitgebreide analyse",
+            "Number": "1", "PriceExcl": "500.00", "TaxCode": "V21", "TaxPercentage": "21",
+        }])
+        r = invoice_to_factuur(wf)["regels"][0]
+        self.assertNotIn("<", r["omschrijving"])
+        self.assertIn("Wij verzorgen als bureau", r["omschrijving"])
+
+
 if __name__ == "__main__":
     unittest.main()

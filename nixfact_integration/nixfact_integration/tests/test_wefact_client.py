@@ -65,6 +65,16 @@ class TestRequest(unittest.TestCase):
         client.list_all("debtor", params={"modified": "2026-07-01 00:00:00"})
         self.assertEqual(t.calls[0]["modified"], "2026-07-01 00:00:00")
 
+    def test_list_all_stopt_bij_totalresults_in_een_call(self):
+        # WeFact geeft alles in één call terug met totalresults; niet
+        # blijven doorpagineren over overlappende vensters.
+        page = {"status": "success", "totalresults": 3,
+                "invoices": [{"i": 0}, {"i": 1}, {"i": 2}]}
+        client, t = self._client([page])
+        items = client.list_all("invoice")
+        self.assertEqual(len(items), 3)
+        self.assertEqual(len(t.calls), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

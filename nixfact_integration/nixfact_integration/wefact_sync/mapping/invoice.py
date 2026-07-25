@@ -6,7 +6,22 @@
 
 from __future__ import annotations
 
+import re
+
 from nixfact_integration.wefact_sync.mapping.status import nixfact_status
+
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+_WS_RE = re.compile(r"\s+")
+
+
+def strip_html(tekst: str) -> str:
+    """Verwijder HTML-tags en normaliseer witruimte in een omschrijving.
+
+    WeFact-regelomschrijvingen bevatten opmaak (<strong>, <b>) en zijn soms
+    hele alinea's; als platte tekst passen ze in het Small-Text-veld.
+    """
+    zonder = _HTML_TAG_RE.sub("", tekst or "")
+    return _WS_RE.sub(" ", zonder).strip()
 
 
 def btw_categorie(tax_code: str, tax_percentage: float) -> str:
@@ -22,7 +37,7 @@ def btw_categorie(tax_code: str, tax_percentage: float) -> str:
 def _regel(wf_line: dict) -> dict:
     pct = float(wf_line.get("TaxPercentage") or 0)
     return {
-        "omschrijving": (wf_line.get("Description") or "").strip(),
+        "omschrijving": strip_html(wf_line.get("Description")),
         "aantal": float(wf_line.get("Number") or 0),
         "eenheidsprijs": float(wf_line.get("PriceExcl") or 0),
         "btw_categorie": btw_categorie(wf_line.get("TaxCode"), pct),

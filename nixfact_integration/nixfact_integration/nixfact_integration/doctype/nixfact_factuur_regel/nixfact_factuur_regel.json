@@ -16,7 +16,7 @@
  "fields": [
   {
    "fieldname": "omschrijving",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "label": "Omschrijving",
    "reqd": 1,
    "in_list_view": 1,
@@ -68,7 +68,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-07-21 12:00:00.000000",
+ "modified": "2026-07-25 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "NixFact Integration",
  "name": "NixFact Factuur Regel",

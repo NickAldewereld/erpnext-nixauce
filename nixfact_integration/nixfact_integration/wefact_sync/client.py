@@ -76,10 +76,18 @@ class WeFactClient:
             page_params["offset"] = offset
             data = self.request(controller, action, page_params)
             items = data.get(sleutel) or data.get(controller) or []
-            alles.extend(items)
-            if len(items) < PAGE_SIZE:
+            if not items:
                 break
-            offset += PAGE_SIZE
+            alles.extend(items)
+            # WeFact geeft alle resultaten in één call terug (offset skipt van
+            # boven), niet 100/pagina. Stop zodra we totalresults binnen hebben;
+            # val terug op de PAGE_SIZE-heuristiek als totalresults ontbreekt.
+            total = int(data.get("totalresults") or 0)
+            if total and len(alles) >= total:
+                break
+            if not total and len(items) < PAGE_SIZE:
+                break
+            offset += len(items)
         return alles
 
     def show(self, controller: str, identifier: str, id_field: str) -> dict:
