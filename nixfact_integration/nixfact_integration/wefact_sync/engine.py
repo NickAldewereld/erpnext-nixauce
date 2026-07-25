@@ -81,6 +81,46 @@ def backfill_facturen(client: WeFactClient, company: str) -> None:
     _rapporteer(verwerkt, mislukt, "facturen", waarschuwingen)
 
 
+def vul_ontbrekende_facturen() -> None:
+    """Haal alléén de facturen op die nog niet in NIXFact staan.
+
+    Gericht en zacht voor de WeFact-IP-firewall: één lijst-call, daarna een
+    detail-fetch (gepacet) uitsluitend voor de ontbrekende facturen. Bedoeld
+    om een door de firewall afgebroken backfill af te maken zonder alle 815
+    opnieuw op te halen.
+    """
+    client = _client()
+    company = upsert.ensure_company()
+    bestaand = set(
+        frappe.get_all("NixFact Factuur", pluck="wefact_identifier") or []
+    )
+    verwerkt, mislukt = 0, []
+    waarschuwingen: list[str] = []
+    for kop in client.list_all("invoice"):
+        wid = str(kop.get("Identifier") or "")
+        if wid in bestaand:
+            continue
+        code = kop.get("InvoiceCode") or ""
+        try:
+            detail = client.show("invoice", code, "InvoiceCode")
+            factuur = invoice_to_factuur(detail)
+            if factuur.get("is_creditnota"):
+                waarschuwingen.append(
+                    f"factuur {code}: creditnota overgeslagen (afhandeling volgt in vervolgfase)"
+                )
+                continue
+            upsert.upsert_factuur(factuur, company)
+            verwerkt += 1
+            if factuur.get("onbekende_status"):
+                waarschuwingen.append(
+                    f"factuur {code}: onbekende WeFact-status, geïmporteerd als Concept"
+                )
+        except Exception as exc:  # noqa: BLE001
+            frappe.db.rollback()
+            mislukt.append(Mislukking("factuur", code, str(exc)))
+    _rapporteer(verwerkt, mislukt, "facturen (aanvulling)", waarschuwingen)
+
+
 def volledige_backfill(alleen: str | None = None) -> None:
     """Bench-entrypoint: importeer debiteuren (eerst) en verkoopfacturen."""
     client = _client()

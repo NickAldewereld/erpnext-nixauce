@@ -36,7 +36,7 @@ class WeFactClient:
         api_key: str,
         endpoint: str = DEFAULT_ENDPOINT,
         transport: Callable | None = None,
-        min_interval: float = 0.4,
+        min_interval: float = 1.2,
     ) -> None:
         if not api_key:
             raise ValueError("WeFact API-key ontbreekt.")
