@@ -130,6 +130,20 @@ def upsert_factuur(factuur: dict, company: str) -> str:
     return doc.name
 
 
+def upsert_supplier(supplier: dict) -> str:
+    """Maak of werk een Supplier bij, gekoppeld op wefact_identifier."""
+    bestaand = _find_by_wefact_id("Supplier", supplier["wefact_identifier"])
+    if bestaand:
+        doc = frappe.get_doc("Supplier", bestaand)
+        doc.update(supplier)
+    else:
+        doc = frappe.get_doc({"doctype": "Supplier", **supplier})
+    doc.flags.ignore_mandatory = True
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return doc.name
+
+
 def upsert_creditnota(factuur: dict, company: str) -> str:
     """Upsert een verkoop-creditnota als NixFact Factuur met negatieve regels."""
     naam = upsert_factuur(factuur, company)
