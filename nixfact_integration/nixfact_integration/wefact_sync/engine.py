@@ -182,9 +182,11 @@ def incrementele_sync() -> None:
     Lijst per entiteit met ``modified_since=cursor`` — WeFact geeft dan
     alleen gewijzigde records terug, dus normaal een handvol per uur (geen
     burst die de IP-firewall triggert). Alleen die records krijgen een
-    detail-fetch + upsert. De cursor schuift op naar de hoogste Modified.
+    detail-fetch + upsert. De cursor schuift alleen op tot de hoogste
+    Modified die veilig is — nooit voorbij een mislukt record, anders wordt
+    dat record bij de volgende run permanent overgeslagen.
     Debiteuren met een lege ``Modified`` worden hier gemist; een dagelijkse
-    volledige debiteuren-backfill (los te schedulen) vangt die.
+    volledige debiteuren-backfill (``dagelijkse_debiteuren_sync``) vangt die.
     """
     from nixfact_integration.wefact_sync import cursor
 
@@ -199,24 +201,42 @@ def incrementele_sync() -> None:
     gewijzigd = client.list_all(
         "debtor", params={"modified": sinds} if sinds else None
     )
+    mislukt: list[Mislukking] = []
+    succes_mod: list[str] = []
+    fout_mod: list[str] = []
     for kop in gewijzigd:
         code = kop.get("DebtorCode") or ""
+        mod = str(kop.get("Modified") or "")
         try:
             wf = client.show("debtor", code, "DebtorCode")
             upsert.upsert_customer(debtor_to_customer(wf), debtor_to_address(wf))
-        except Exception:  # noqa: BLE001
+            succes_mod.append(mod)
+        except Exception as exc:  # noqa: BLE001
             frappe.db.rollback()
-            frappe.log_error(title=f"WeFact-sync debiteur {code}",
-                             message=frappe.get_traceback())
-    cursor.schrijf_cursor("debtor", cursor.max_modified(gewijzigd))
+            fout_mod.append(mod)
+            mislukt.append(Mislukking("debiteur", code, str(exc)))
+    # Cursor alleen veilig opschuiven: nooit voorbij de vroegste mislukking.
+    if fout_mod:
+        grens = min(m for m in fout_mod if m) if any(fout_mod) else ""
+        veilig = [m for m in succes_mod if m and (not grens or m < grens)]
+        nieuwe_cursor = max(veilig) if veilig else cursor.lees_cursor("debtor")
+    else:
+        nieuwe_cursor = cursor.max_modified(gewijzigd)
+    cursor.schrijf_cursor("debtor", nieuwe_cursor)
+    _rapporteer(len(succes_mod), mislukt, "debiteuren (sync)")
 
     # Facturen (incl. creditnota's)
     sinds = cursor.lees_cursor("invoice")
     gewijzigd = client.list_all(
         "invoice", params={"modified": sinds} if sinds else None
     )
+    mislukt = []
+    waarschuwingen: list[str] = []
+    succes_mod = []
+    fout_mod = []
     for kop in gewijzigd:
         code = kop.get("InvoiceCode") or ""
+        mod = str(kop.get("Modified") or "")
         try:
             detail = client.show("invoice", code, "InvoiceCode")
             factuur = invoice_to_factuur(detail)
@@ -227,11 +247,36 @@ def incrementele_sync() -> None:
                 upsert.upsert_creditnota(creditnota_to_factuur(detail), company)
             else:
                 upsert.upsert_factuur(factuur, company)
-        except Exception:  # noqa: BLE001
+                if factuur.get("onbekende_status"):
+                    waarschuwingen.append(
+                        f"factuur {code}: onbekende WeFact-status, geïmporteerd als Concept"
+                    )
+            succes_mod.append(mod)
+        except Exception as exc:  # noqa: BLE001
             frappe.db.rollback()
-            frappe.log_error(title=f"WeFact-sync factuur {code}",
-                             message=frappe.get_traceback())
-    cursor.schrijf_cursor("invoice", cursor.max_modified(gewijzigd))
+            fout_mod.append(mod)
+            mislukt.append(Mislukking("factuur", code, str(exc)))
+    # Cursor alleen veilig opschuiven: nooit voorbij de vroegste mislukking.
+    if fout_mod:
+        grens = min(m for m in fout_mod if m) if any(fout_mod) else ""
+        veilig = [m for m in succes_mod if m and (not grens or m < grens)]
+        nieuwe_cursor = max(veilig) if veilig else cursor.lees_cursor("invoice")
+    else:
+        nieuwe_cursor = cursor.max_modified(gewijzigd)
+    cursor.schrijf_cursor("invoice", nieuwe_cursor)
+    _rapporteer(len(succes_mod), mislukt, "facturen (sync)", waarschuwingen)
+
+
+def dagelijkse_debiteuren_sync() -> None:
+    """Dagelijkse volledige debiteuren-sync — vangt debiteuren met een lege
+    WeFact-`Modified` die de uurlijkse incrementele sync mist. Gepacet en
+    idempotent; ~276 calls/dag, ruim binnen de WeFact-limieten.
+    """
+    settings = frappe.get_single("NixFact Instellingen")
+    if not settings.wefact_sync_enabled:
+        return
+    client = _client()
+    backfill_debiteuren(client)
 
 
 def volledige_backfill(alleen: str | None = None) -> None:

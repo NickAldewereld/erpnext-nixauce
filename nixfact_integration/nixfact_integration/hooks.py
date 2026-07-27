@@ -30,6 +30,7 @@ scheduler_events = {
 	"daily": [
 		"nixfact_integration.tasks.verstuur_herinneringen",
 		"nixfact_integration.tasks.verstuur_aanmaningen",
+		"nixfact_integration.wefact_sync.engine.dagelijkse_debiteuren_sync",
 	],
 	"cron": {
 		"0 9 * * *": [
