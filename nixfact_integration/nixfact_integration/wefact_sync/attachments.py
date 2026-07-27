@@ -38,7 +38,9 @@ def hang_bijlagen(client, doc_name: str, attachments: list[dict]) -> int:
                 "attachment", "download", {"Identifier": att.get("Identifier")}
             )
             data, naam = decode_base64(meta.get("attachment", meta))
-            filename = _SAFE.sub("_", naam) or "bijlage.pdf"
+            ident = str(att.get("Identifier") or "")
+            veilig_naam = _SAFE.sub("_", naam) or "bijlage.pdf"
+            filename = f"{ident}-{veilig_naam}" if ident else veilig_naam
 
             bestaand = frappe.get_all(
                 "File",

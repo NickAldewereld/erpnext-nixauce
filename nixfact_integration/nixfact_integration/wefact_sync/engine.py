@@ -199,7 +199,7 @@ def incrementele_sync() -> None:
     # Debiteuren
     sinds = cursor.lees_cursor("debtor")
     gewijzigd = client.list_all(
-        "debtor", params={"modified": sinds} if sinds else None
+        "debtor", params={"modified": {"from": sinds}} if sinds else None
     )
     mislukt: list[Mislukking] = []
     succes_mod: list[str] = []
@@ -228,7 +228,7 @@ def incrementele_sync() -> None:
     # Facturen (incl. creditnota's)
     sinds = cursor.lees_cursor("invoice")
     gewijzigd = client.list_all(
-        "invoice", params={"modified": sinds} if sinds else None
+        "invoice", params={"modified": {"from": sinds}} if sinds else None
     )
     mislukt = []
     waarschuwingen: list[str] = []
