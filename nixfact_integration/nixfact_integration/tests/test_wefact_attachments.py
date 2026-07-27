@@ -29,5 +29,22 @@ class TestDecode(unittest.TestCase):
         self.assertEqual(decode_base64(att)[0], raw)
 
 
+class TestExtractDownload(unittest.TestCase):
+
+    def test_success_lijst_formaat(self):
+        from nixfact_integration.wefact_sync.attachments import extract_download
+        meta = {"status": "success",
+                "success": ["3481", "bon.jpg", "JVBERi0xLjQgc2Nhbg==", "image/jpeg"]}
+        data, naam = extract_download(meta)
+        self.assertEqual(data, b"%PDF-1.4 scan")
+        self.assertEqual(naam, "bon.jpg")
+
+    def test_fallback_attachment_dict(self):
+        from nixfact_integration.wefact_sync.attachments import extract_download
+        meta = {"attachment": {"Base64": "JVBERi0xLjQgc2Nhbg==", "Filename": "x.pdf"}}
+        data, naam = extract_download(meta)
+        self.assertEqual(naam, "x.pdf")
+
+
 if __name__ == "__main__":
     unittest.main()

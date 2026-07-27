@@ -23,6 +23,20 @@ def decode_base64(att: dict) -> tuple[bytes, str]:
     return base64.b64decode(b64), naam
 
 
+def extract_download(meta: dict) -> tuple[bytes, str]:
+    """Haal (bytes, bestandsnaam) uit een WeFact attachment/download-respons.
+
+    WeFact geeft de inhoud terug als een lijst onder ``success``:
+    ``[Identifier, Filename, Base64, MimeType]``. Als fallback (ander/ouder
+    formaat) valt hij terug op ``decode_base64`` met de ``attachment``-dict.
+    """
+    succes = meta.get("success")
+    if isinstance(succes, list) and len(succes) >= 3 and succes[2]:
+        naam = (str(succes[1]) if len(succes) > 1 and succes[1] else "bijlage").strip()
+        return base64.b64decode(succes[2]), naam
+    return decode_base64(meta.get("attachment", meta))
+
+
 def hang_bijlagen(
     client, doc_name: str, attachments: list[dict], credit_invoice_code: str = ""
 ) -> int:
@@ -42,7 +56,7 @@ def hang_bijlagen(
             if credit_invoice_code:
                 params["CreditInvoiceCode"] = credit_invoice_code
             meta = client.request("attachment", "download", params)
-            data, naam = decode_base64(meta.get("attachment", meta))
+            data, naam = extract_download(meta)
             ident = str(att.get("Identifier") or "")
             veilig_naam = _SAFE.sub("_", naam) or "bijlage.pdf"
             filename = f"{ident}-{veilig_naam}" if ident else veilig_naam
