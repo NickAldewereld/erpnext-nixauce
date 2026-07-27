@@ -133,6 +133,12 @@ WORKDIR /home/frappe
 COPY --chown=frappe:frappe --from=builder /home/frappe/.local /home/frappe/.local
 COPY --chown=frappe:frappe --from=builder /home/frappe/frappe-bench /home/frappe/frappe-bench
 
+# Stash the built assets OUTSIDE the sites/ volume mount. At runtime the
+# sites_data volume shadows sites/assets, so without a re-sync the volume can
+# drift from the app baked into this image (stale asset manifest -> bundle 404s
+# -> unstyled site). entrypoint.sh mirrors this stash into the volume each boot.
+RUN cp -a /home/frappe/frappe-bench/sites/assets /home/frappe/frappe-bench/assets-image
+
 WORKDIR /home/frappe/frappe-bench
 
 COPY --chown=frappe:frappe deployment/docker/entrypoint.sh /entrypoint.sh

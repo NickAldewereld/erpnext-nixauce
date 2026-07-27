@@ -44,4 +44,14 @@ with open(path, "w") as fh:
     json.dump(cfg, fh, indent=1, sort_keys=True)
 PY
 
+# Re-sync the built assets into the sites volume on every boot. The sites_data
+# volume shadows sites/assets, so the volume bundles + assets.json manifest can
+# drift from the app baked into this image after a rebuild, leaving the app
+# referencing bundle hashes that 404 (unstyled site). Mirror image -> volume so
+# manifest and bundles always match. Idempotent; runs for all roles.
+if [ -d /home/frappe/frappe-bench/assets-image ]; then
+    mkdir -p /home/frappe/frappe-bench/sites/assets
+    cp -a -f /home/frappe/frappe-bench/assets-image/. /home/frappe/frappe-bench/sites/assets/
+fi
+
 exec "$@"
