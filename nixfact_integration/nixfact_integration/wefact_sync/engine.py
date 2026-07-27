@@ -83,6 +83,41 @@ def backfill_facturen(client: WeFactClient, company: str) -> None:
     _rapporteer(verwerkt, mislukt, "facturen", waarschuwingen)
 
 
+def backfill_crediteuren(client: WeFactClient) -> None:
+    from nixfact_integration.wefact_sync.mapping.creditor import creditor_to_supplier
+    verwerkt, mislukt = 0, []
+    for kop in client.list_all("creditor"):
+        code = kop.get("CreditorCode") or ""
+        try:
+            wf = client.show("creditor", code, "CreditorCode")
+            upsert.upsert_supplier(creditor_to_supplier(wf))
+            verwerkt += 1
+        except Exception as exc:  # noqa: BLE001
+            frappe.db.rollback()
+            mislukt.append(Mislukking("crediteur", code, str(exc)))
+    _rapporteer(verwerkt, mislukt, "crediteuren")
+
+
+def backfill_inkoop(client: WeFactClient, company: str) -> None:
+    from nixfact_integration.wefact_sync.mapping.inkoop import inkoop_to_dict
+    from nixfact_integration.wefact_sync.attachments import hang_bijlagen
+    verwerkt, mislukt, waarschuwingen = 0, [], []
+    for kop in client.list_all("creditinvoice"):
+        code = kop.get("CreditInvoiceCode") or ""
+        try:
+            wf = client.show("creditinvoice", code, "CreditInvoiceCode")
+            dic = inkoop_to_dict(wf)
+            naam = upsert.upsert_inkoopfactuur(dic, company)
+            n = hang_bijlagen(client, naam, dic["attachments"])
+            if n < len(dic["attachments"]):
+                waarschuwingen.append(f"inkoop {code}: {len(dic['attachments'])-n} bijlage(n) niet gedownload")
+            verwerkt += 1
+        except Exception as exc:  # noqa: BLE001
+            frappe.db.rollback()
+            mislukt.append(Mislukking("inkoop", code, str(exc)))
+    _rapporteer(verwerkt, mislukt, "inkoop", waarschuwingen)
+
+
 def vul_ontbrekende_facturen() -> None:
     """Haal alléén de facturen op die nog niet in NIXFact staan.
 
@@ -134,3 +169,6 @@ def volledige_backfill(alleen: str | None = None) -> None:
         backfill_debiteuren(client)
     if alleen in (None, "facturen"):
         backfill_facturen(client, company)
+    if alleen in (None, "inkoop"):
+        backfill_crediteuren(client)
+        backfill_inkoop(client, company)

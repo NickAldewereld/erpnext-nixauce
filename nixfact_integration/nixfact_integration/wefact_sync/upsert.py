@@ -144,6 +144,35 @@ def upsert_supplier(supplier: dict) -> str:
     return doc.name
 
 
+def upsert_inkoopfactuur(dic: dict, company: str) -> str:
+    """Upsert een NixFact Inkoopfactuur, gekoppeld op wefact_identifier."""
+    leverancier = frappe.db.get_value(
+        "Supplier", {"wefact_creditor_code": dic["wefact_creditor_code"]}, "name"
+    )
+    if not leverancier:
+        raise ValueError(f"Geen leverancier voor {dic['wefact_creditor_code']}")
+    kop = {
+        "leverancier": leverancier,
+        "company": company,
+        "inkoopfactuur_nr": dic["inkoopfactuur_nr"],
+        "factuurdatum": dic["factuurdatum"],
+        "betalingskenmerk": dic["betalingskenmerk"],
+        "bedrag_excl": dic["bedrag_excl"],
+        "btw_percentage": dic["btw_percentage"],
+        "wefact_identifier": dic["wefact_identifier"],
+    }
+    bestaand = _find_by_wefact_id("NixFact Inkoopfactuur", dic["wefact_identifier"])
+    if bestaand:
+        doc = frappe.get_doc("NixFact Inkoopfactuur", bestaand)
+        doc.update(kop)
+    else:
+        doc = frappe.get_doc({"doctype": "NixFact Inkoopfactuur", **kop})
+    doc.flags.ignore_mandatory = True
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return doc.name
+
+
 def upsert_creditnota(factuur: dict, company: str) -> str:
     """Upsert een verkoop-creditnota als NixFact Factuur met negatieve regels."""
     naam = upsert_factuur(factuur, company)
