@@ -128,3 +128,15 @@ def upsert_factuur(factuur: dict, company: str) -> str:
     doc.save(ignore_permissions=True)
     frappe.db.commit()
     return doc.name
+
+
+def upsert_creditnota(factuur: dict, company: str) -> str:
+    """Upsert een verkoop-creditnota als NixFact Factuur met negatieve regels."""
+    naam = upsert_factuur(factuur, company)
+    doc = frappe.get_doc("NixFact Factuur", naam)
+    doc.is_creditnota = 1
+    doc.origineel_wefact_id = factuur.get("origineel_wefact_id") or ""
+    doc.flags.ignore_mandatory = True
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return naam

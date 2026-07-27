@@ -65,9 +65,11 @@ def backfill_facturen(client: WeFactClient, company: str) -> None:
             detail = client.show("invoice", code, "InvoiceCode")
             factuur = invoice_to_factuur(detail)
             if factuur.get("is_creditnota"):
-                waarschuwingen.append(
-                    f"factuur {code}: creditnota overgeslagen (afhandeling volgt in vervolgfase)"
+                from nixfact_integration.wefact_sync.mapping.creditnota import (
+                    creditnota_to_factuur,
                 )
+                upsert.upsert_creditnota(creditnota_to_factuur(detail), company)
+                verwerkt += 1
                 continue
             upsert.upsert_factuur(factuur, company)
             verwerkt += 1
