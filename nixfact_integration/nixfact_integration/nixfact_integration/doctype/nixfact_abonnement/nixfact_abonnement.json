@@ -24,7 +24,8 @@
   "volgende_factuur_datum",
   "laatste_factuur_datum",
   "section_break_extra",
-  "opmerkingen"
+  "opmerkingen",
+  "wefact_identifier"
  ],
  "fields": [
   {
@@ -148,11 +149,18 @@
    "fieldname": "opmerkingen",
    "fieldtype": "Small Text",
    "label": "Opmerkingen"
+  },
+  {
+   "fieldname": "wefact_identifier",
+   "fieldtype": "Data",
+   "label": "WeFact Identifier",
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-03-05 12:00:00.000000",
+ "modified": "2026-07-27 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "NixFact Integration",
  "name": "NixFact Abonnement",

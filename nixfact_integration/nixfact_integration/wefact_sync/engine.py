@@ -118,6 +118,21 @@ def backfill_inkoop(client: WeFactClient, company: str) -> None:
     _rapporteer(verwerkt, mislukt, "inkoop", waarschuwingen)
 
 
+def backfill_abonnementen(client: WeFactClient) -> None:
+    from nixfact_integration.wefact_sync.mapping.abonnement import abonnement_to_dict
+    verwerkt, mislukt = 0, []
+    for kop in client.list_all("subscription"):
+        ident = str(kop.get("Identifier") or "")
+        try:
+            wf = client.show("subscription", ident, "Identifier")
+            upsert.upsert_abonnement(abonnement_to_dict(wf))
+            verwerkt += 1
+        except Exception as exc:  # noqa: BLE001
+            frappe.db.rollback()
+            mislukt.append(Mislukking("abonnement", ident, str(exc)))
+    _rapporteer(verwerkt, mislukt, "abonnementen")
+
+
 def vul_ontbrekende_facturen() -> None:
     """Haal alléén de facturen op die nog niet in NIXFact staan.
 
@@ -172,3 +187,5 @@ def volledige_backfill(alleen: str | None = None) -> None:
     if alleen in (None, "inkoop"):
         backfill_crediteuren(client)
         backfill_inkoop(client, company)
+    if alleen in (None, "abonnementen"):
+        backfill_abonnementen(client)

@@ -173,6 +173,35 @@ def upsert_inkoopfactuur(dic: dict, company: str) -> str:
     return doc.name
 
 
+def upsert_abonnement(dic: dict) -> str:
+    """Upsert een NixFact Abonnement met facturering UIT (schaduwmodus)."""
+    klant = frappe.db.get_value(
+        "Customer", {"wefact_debtor_code": dic["klant_debtor_code"]}, "name"
+    )
+    if not klant:
+        raise ValueError(f"Geen klant voor {dic['klant_debtor_code']}")
+    velden = {
+        "klant": klant,
+        "omschrijving": dic["omschrijving"],
+        "bedrag_excl_btw": dic["bedrag_excl_btw"],
+        "btw_percentage": dic["btw_percentage"],
+        "frequentie": dic["frequentie"],
+        "volgende_factuur_datum": dic["volgende_factuur_datum"],
+        "wefact_identifier": dic["wefact_identifier"],
+        "status": "Gepauzeerd",
+    }
+    bestaand = _find_by_wefact_id("NixFact Abonnement", dic["wefact_identifier"])
+    if bestaand:
+        doc = frappe.get_doc("NixFact Abonnement", bestaand)
+        doc.update(velden)
+    else:
+        doc = frappe.get_doc({"doctype": "NixFact Abonnement", **velden})
+    doc.flags.ignore_mandatory = True
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return doc.name
+
+
 def upsert_creditnota(factuur: dict, company: str) -> str:
     """Upsert een verkoop-creditnota als NixFact Factuur met negatieve regels."""
     naam = upsert_factuur(factuur, company)
