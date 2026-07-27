@@ -23,7 +23,9 @@ def decode_base64(att: dict) -> tuple[bytes, str]:
     return base64.b64decode(b64), naam
 
 
-def hang_bijlagen(client, doc_name: str, attachments: list[dict]) -> int:
+def hang_bijlagen(
+    client, doc_name: str, attachments: list[dict], credit_invoice_code: str = ""
+) -> int:
     """Download elke bijlage en hang 'm als privé-File aan het doc.
 
     Per-bijlage-geïsoleerd; geeft het aantal geslaagde bijlagen terug.
@@ -34,9 +36,12 @@ def hang_bijlagen(client, doc_name: str, attachments: list[dict]) -> int:
     gelukt = 0
     for att in attachments:
         try:
-            meta = client.request(
-                "attachment", "download", {"Identifier": att.get("Identifier")}
-            )
+            # WeFact vereist Type + de parent-CreditInvoiceCode naast de
+            # bijlage-Identifier, anders "De bijlage kon niet gevonden worden".
+            params = {"Type": "creditinvoice", "Identifier": att.get("Identifier")}
+            if credit_invoice_code:
+                params["CreditInvoiceCode"] = credit_invoice_code
+            meta = client.request("attachment", "download", params)
             data, naam = decode_base64(meta.get("attachment", meta))
             ident = str(att.get("Identifier") or "")
             veilig_naam = _SAFE.sub("_", naam) or "bijlage.pdf"

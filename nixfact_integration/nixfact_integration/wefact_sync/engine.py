@@ -108,7 +108,9 @@ def backfill_inkoop(client: WeFactClient, company: str) -> None:
             wf = client.show("creditinvoice", code, "CreditInvoiceCode")
             dic = inkoop_to_dict(wf)
             naam = upsert.upsert_inkoopfactuur(dic, company)
-            n = hang_bijlagen(client, naam, dic["attachments"])
+            n = hang_bijlagen(
+                client, naam, dic["attachments"], dic["inkoopfactuur_nr"]
+            )
             if n < len(dic["attachments"]):
                 waarschuwingen.append(f"inkoop {code}: {len(dic['attachments'])-n} bijlage(n) niet gedownload")
             verwerkt += 1
