@@ -24,6 +24,9 @@ doc_events = {
 
 # Scheduled tasks
 scheduler_events = {
+	"hourly": [
+		"nixfact_integration.wefact_sync.engine.incrementele_sync",
+	],
 	"daily": [
 		"nixfact_integration.tasks.verstuur_herinneringen",
 		"nixfact_integration.tasks.verstuur_aanmaningen",

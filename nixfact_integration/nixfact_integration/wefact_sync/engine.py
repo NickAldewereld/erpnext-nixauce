@@ -176,6 +176,64 @@ def vul_ontbrekende_facturen() -> None:
     _rapporteer(verwerkt, mislukt, "facturen (aanvulling)", waarschuwingen)
 
 
+def incrementele_sync() -> None:
+    """Scheduler-entrypoint: verwerk alleen records die WeFact wijzigde.
+
+    Lijst per entiteit met ``modified_since=cursor`` — WeFact geeft dan
+    alleen gewijzigde records terug, dus normaal een handvol per uur (geen
+    burst die de IP-firewall triggert). Alleen die records krijgen een
+    detail-fetch + upsert. De cursor schuift op naar de hoogste Modified.
+    Debiteuren met een lege ``Modified`` worden hier gemist; een dagelijkse
+    volledige debiteuren-backfill (los te schedulen) vangt die.
+    """
+    from nixfact_integration.wefact_sync import cursor
+
+    settings = frappe.get_single("NixFact Instellingen")
+    if not settings.wefact_sync_enabled:
+        return
+    client = _client()
+    company = upsert.ensure_company()
+
+    # Debiteuren
+    sinds = cursor.lees_cursor("debtor")
+    gewijzigd = client.list_all(
+        "debtor", params={"modified": sinds} if sinds else None
+    )
+    for kop in gewijzigd:
+        code = kop.get("DebtorCode") or ""
+        try:
+            wf = client.show("debtor", code, "DebtorCode")
+            upsert.upsert_customer(debtor_to_customer(wf), debtor_to_address(wf))
+        except Exception:  # noqa: BLE001
+            frappe.db.rollback()
+            frappe.log_error(title=f"WeFact-sync debiteur {code}",
+                             message=frappe.get_traceback())
+    cursor.schrijf_cursor("debtor", cursor.max_modified(gewijzigd))
+
+    # Facturen (incl. creditnota's)
+    sinds = cursor.lees_cursor("invoice")
+    gewijzigd = client.list_all(
+        "invoice", params={"modified": sinds} if sinds else None
+    )
+    for kop in gewijzigd:
+        code = kop.get("InvoiceCode") or ""
+        try:
+            detail = client.show("invoice", code, "InvoiceCode")
+            factuur = invoice_to_factuur(detail)
+            if factuur.get("is_creditnota"):
+                from nixfact_integration.wefact_sync.mapping.creditnota import (
+                    creditnota_to_factuur,
+                )
+                upsert.upsert_creditnota(creditnota_to_factuur(detail), company)
+            else:
+                upsert.upsert_factuur(factuur, company)
+        except Exception:  # noqa: BLE001
+            frappe.db.rollback()
+            frappe.log_error(title=f"WeFact-sync factuur {code}",
+                             message=frappe.get_traceback())
+    cursor.schrijf_cursor("invoice", cursor.max_modified(gewijzigd))
+
+
 def volledige_backfill(alleen: str | None = None) -> None:
     """Bench-entrypoint: importeer debiteuren (eerst) en verkoopfacturen."""
     client = _client()
