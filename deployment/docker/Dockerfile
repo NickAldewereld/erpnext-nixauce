@@ -81,15 +81,22 @@ WORKDIR /home/frappe/frappe-bench
 # Pin to the exact commits. bench clones shallow and names the remote
 # `upstream`, so fetch the bare SHA (GitHub serves these) rather than
 # unshallowing the entire history just to reach one commit.
+# `bench init` ran yarn install against develop HEAD, so node_modules belongs to
+# whatever upstream pushed today — not to FRAPPE_REF. The pin covered the code
+# and left the dependencies drifting, which surfaces as a missing esbuild plugin
+# the moment the build cache no longer hides it. Re-resolve against the pinned
+# package.json so code and node_modules describe the same commit.
 RUN cd apps/frappe \
     && git fetch --depth=1 upstream ${FRAPPE_REF} \
-    && git checkout --detach FETCH_HEAD
+    && git checkout --detach FETCH_HEAD \
+    && yarn install
 
 RUN bench get-app erpnext --branch ${ERPNEXT_BRANCH}
 
 RUN cd apps/erpnext \
     && git fetch --depth=1 upstream ${ERPNEXT_REF} \
-    && git checkout --detach FETCH_HEAD
+    && git checkout --detach FETCH_HEAD \
+    && yarn install
 
 # get-app also runs yarn install + the asset build for the app's Vue frontend.
 # Node's default heap is too small for that inside this container's memory
@@ -117,7 +124,11 @@ RUN cd apps/nixfact_integration \
     && (grep -qxF nixfact_integration sites/apps.txt 2>/dev/null \
         || echo nixfact_integration >> sites/apps.txt)
 
+# Build assets AFTER every app sits on its pinned commit. get-app builds them
+# at branch HEAD, which for a pinned app is the wrong tree; rebuilding here is
+# what makes the pins mean anything for the shipped bundles.
 RUN bench setup requirements \
+    && bench build --app erpnext \
     && bench build --app nixfact_integration \
     && bench build --app crm
 
