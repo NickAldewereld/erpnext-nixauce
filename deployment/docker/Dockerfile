@@ -14,6 +14,11 @@ ARG PYTHON_IMAGE=python:3.14-slim-bookworm
 # version-17 is cut. Override at build time with --build-arg if needed.
 ARG FRAPPE_BRANCH=develop
 ARG ERPNEXT_BRANCH=develop
+# Frappe CRM — the SPA served at /crm, on this same site and database, so it
+# shares Customer/Contact/Lead with ERPNext instead of duplicating them.
+# Upstream's own installer targets `main` against frappe version-15; on the v17
+# dev line only `develop` tracks along, so it follows the same rule as above.
+ARG CRM_BRANCH=develop
 # A branch name is not a version. Tracking `develop` by name means every rebuild
 # silently picks up whatever upstream happened to push, so an image can neither
 # be reproduced nor rolled back — on an unreleased line that is a live hazard,
@@ -21,6 +26,7 @@ ARG ERPNEXT_BRANCH=develop
 # and then check out these exact commits. Bump them deliberately; never drift.
 ARG FRAPPE_REF=6e3d89f7ffc3e986995c5604064101b75bf4c034
 ARG ERPNEXT_REF=ac68db3fa6cdfcaa900a856568d977e8e1de2356
+ARG CRM_REF=66165cb1dae46bd02f5899baeb30f05df7b6098e
 # Frappe develop requires Node >=24.
 ARG NODE_MAJOR=24
 
@@ -31,8 +37,10 @@ FROM ${PYTHON_IMAGE} AS builder
 
 ARG FRAPPE_BRANCH
 ARG ERPNEXT_BRANCH
+ARG CRM_BRANCH
 ARG FRAPPE_REF
 ARG ERPNEXT_REF
+ARG CRM_REF
 ARG NODE_MAJOR
 
 ENV PYTHONUNBUFFERED=1 \
@@ -83,6 +91,17 @@ RUN cd apps/erpnext \
     && git fetch --depth=1 upstream ${ERPNEXT_REF} \
     && git checkout --detach FETCH_HEAD
 
+# get-app also runs yarn install + the asset build for the app's Vue frontend.
+# Node's default heap is too small for that inside this container's memory
+# budget, hence the explicit bump.
+ENV NODE_OPTIONS=--max-old-space-size=3072
+
+RUN bench get-app crm --branch ${CRM_BRANCH}
+
+RUN cd apps/crm \
+    && git fetch --depth=1 upstream ${CRM_REF} \
+    && git checkout --detach FETCH_HEAD
+
 COPY --chown=frappe:frappe ./nixfact_integration apps/nixfact_integration
 
 # bench treats every dir under apps/ as a git repo (git.Repo(app_path)); the
@@ -99,7 +118,8 @@ RUN cd apps/nixfact_integration \
         || echo nixfact_integration >> sites/apps.txt)
 
 RUN bench setup requirements \
-    && bench build --app nixfact_integration
+    && bench build --app nixfact_integration \
+    && bench build --app crm
 
 # --------------------------------------------------------------------------
 # Stage 2: runtime — only what's needed to actually serve traffic.
