@@ -98,7 +98,7 @@ def accepteer_offerte(token: str, email: str, signature_data_url: str):
 
     _send_accept_emails(offerte)
 
-    return {"status": "ok", "redirect": "/offerte-bedankt"}
+    return {"status": "ok", "redirect": "/offerte_bedankt"}
 
 
 @frappe.whitelist(allow_guest=True)

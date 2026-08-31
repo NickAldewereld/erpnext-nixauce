@@ -104,7 +104,7 @@
         });
         if (r.ok) {
             const data = await r.json();
-            window.location = (data.message && data.message.redirect) || '/offerte-bedankt';
+            window.location = (data.message && data.message.redirect) || '/offerte_bedankt';
         } else {
             alert('Ondertekenen mislukt. Probeer het opnieuw of neem contact op.');
         }

@@ -60,7 +60,8 @@
    "label": "Status",
    "options": "Te verwerken\nGeboekt\nBetaald",
    "reqd": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "company",
@@ -100,8 +101,7 @@
    "fieldname": "bedrag_excl",
    "fieldtype": "Currency",
    "label": "Bedrag Excl. BTW",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "default": "21",
@@ -124,6 +124,7 @@
    "fieldtype": "Currency",
    "label": "Bedrag Incl. BTW",
    "read_only": 1,
+   "in_list_view": 1,
    "bold": 1
   },
   {

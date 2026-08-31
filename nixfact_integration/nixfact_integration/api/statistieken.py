@@ -191,6 +191,61 @@ def get_dashboard_data(periode: str = "maand", jaar=None, maand=None) -> dict:
 
 
 @frappe.whitelist()
+def get_omzet_deze_maand_card() -> dict:
+    """Waarde voor de Number Card 'Omzet deze maand'.
+
+    Number Cards van het type Document Type ondersteunen geen dynamisch
+    datumbereik ("deze maand"), dus deze kaart is van het type Custom en
+    haalt de maandomzet hier server-side op. Zelfde definitie als
+    ``get_dashboard_data(periode="maand")``: som van ``bedrag_incl_btw``
+    van facturen met status != Concept in de huidige kalendermaand.
+    """
+    _require_role()
+
+    today = getdate(nowdate())
+    from_date = get_first_day(today)
+    to_date = get_last_day(today)
+
+    waarde = frappe.db.sql(
+        """
+        SELECT COALESCE(SUM(bedrag_incl_btw), 0)
+        FROM `tabNixFact Factuur`
+        WHERE factuur_datum BETWEEN %s AND %s
+          AND status != 'Concept'
+        """,
+        (from_date, to_date),
+    )[0][0] or 0
+
+    return {"value": flt(waarde, 2), "fieldtype": "Currency"}
+
+
+@frappe.whitelist()
+def get_facturen_te_laat_card() -> dict:
+    """Waarde voor de Number Card 'Facturen te laat'.
+
+    Number Cards van het type Document Type kunnen niet filteren op
+    ``vervaldatum < vandaag`` (geen dynamische datum in filters_json),
+    dus deze kaart is van het type Custom. Telt openstaande facturen
+    (Verstuurd / Herinnering verstuurd / Aanmaning verstuurd) waarvan de
+    vervaldatum gepasseerd is.
+    """
+    _require_role()
+
+    aantal = frappe.db.count(
+        "NixFact Factuur",
+        {
+            "vervaldatum": ["<", nowdate()],
+            "status": [
+                "in",
+                ["Verstuurd", "Herinnering verstuurd", "Aanmaning verstuurd"],
+            ],
+        },
+    )
+
+    return {"value": int(aantal or 0), "fieldtype": "Int"}
+
+
+@frappe.whitelist()
 def get_btw_overzicht(kwartaal, jaar=None) -> dict:
     """BTW reporting per kwartaal."""
     _require_role()

@@ -45,13 +45,16 @@
    "fieldtype": "Link",
    "label": "Klant",
    "options": "Customer",
-   "reqd": 1
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "offerte_datum",
    "fieldtype": "Date",
    "label": "Offerte Datum",
-   "reqd": 1
+   "reqd": 1,
+   "in_list_view": 1
   },
   {
    "fieldname": "company",
@@ -74,7 +77,9 @@
    "fieldname": "bedrag_incl",
    "fieldtype": "Currency",
    "label": "Bedrag Incl. BTW",
-   "reqd": 1
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
   },
   {
    "fieldname": "column_break_2",
@@ -91,7 +96,9 @@
    "fieldtype": "Select",
    "label": "Status",
    "options": "Concept\nVerstuurd\nGeaccepteerd\nGeweigerd\nVerlopen\nFactuur aangemaakt",
-   "reqd": 1
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "section_break_ondertekening",

@@ -22,6 +22,13 @@ doc_events = {
 	},
 }
 
+# Fixtures (geïmporteerd bij bench migrate)
+fixtures = [
+	{"dt": "Workspace", "filters": [["name", "=", "NixFact"]]},
+	{"dt": "Number Card", "filters": [["module", "=", "NixFact Integration"]]},
+	{"dt": "Dashboard Chart", "filters": [["module", "=", "NixFact Integration"]]},
+]
+
 # Scheduled tasks
 scheduler_events = {
 	"hourly": [

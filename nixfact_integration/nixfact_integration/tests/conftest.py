@@ -131,6 +131,16 @@ def _install_frappe_stub() -> None:
     utils.nowdate = lambda: date.today().isoformat()
     utils.add_days = lambda d, n: _add_days(d, n).isoformat()
     utils.add_months = _add_months
+
+    def _get_first_day(d):
+        d = _to_date(d)
+        return date(d.year, d.month, 1)
+
+    def _get_last_day(d):
+        return _add_months(_get_first_day(d), 1) - timedelta(days=1)
+
+    utils.get_first_day = _get_first_day
+    utils.get_last_day = _get_last_day
     utils.get_url = lambda: "https://nixfact.test"
     utils.get_datetime = lambda: datetime.now()
     utils.now_datetime = lambda: datetime.now()

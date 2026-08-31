@@ -67,7 +67,8 @@
    "label": "Klant",
    "options": "Customer",
    "reqd": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "klant_naam",
@@ -114,7 +115,8 @@
    "label": "Status",
    "options": "Concept\nVerstuurd\nBetaald\nHerinnering verstuurd\nAanmaning verstuurd\nOninbaar",
    "reqd": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "default": "Email",
@@ -181,7 +183,8 @@
    "fieldname": "openstaand_bedrag",
    "fieldtype": "Currency",
    "label": "Openstaand Bedrag",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 1
   },
   {
    "fieldname": "section_break_betaling",

@@ -1,0 +1,210 @@
+[
+ {
+  "charts": [
+   {
+    "chart_name": "NixFact Omzet per maand",
+    "label": "Omzet per maand"
+   }
+  ],
+  "content": "[{\"id\": \"nxcard1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"NixFact Openstaande facturen\", \"col\": 3}}, {\"id\": \"nxcard2\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"NixFact Facturen te laat\", \"col\": 3}}, {\"id\": \"nxcard3\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"NixFact Omzet deze maand\", \"col\": 3}}, {\"id\": \"nxcard4\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"NixFact Openstaand bedrag\", \"col\": 3}}, {\"id\": \"nxcard5\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"NixFact Lopende abonnementen\", \"col\": 3}}, {\"id\": \"nxspacer1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"nxchart1\", \"type\": \"chart\", \"data\": {\"chart_name\": \"NixFact Omzet per maand\", \"col\": 12}}, {\"id\": \"nxspacer2\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"nxsc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Facturen\", \"col\": 3}}, {\"id\": \"nxsc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Offertes\", \"col\": 3}}, {\"id\": \"nxsc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Abonnementen\", \"col\": 3}}, {\"id\": \"nxsc4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Banktransacties\", \"col\": 3}}, {\"id\": \"nxsc5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Instellingen\", \"col\": 3}}, {\"id\": \"nxspacer3\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"nxcb1\", \"type\": \"card\", \"data\": {\"card_name\": \"Verkopen\", \"col\": 3}}, {\"id\": \"nxcb2\", \"type\": \"card\", \"data\": {\"card_name\": \"Inkopen\", \"col\": 3}}, {\"id\": \"nxcb3\", \"type\": \"card\", \"data\": {\"card_name\": \"Bank & Betalingen\", \"col\": 3}}, {\"id\": \"nxcb4\", \"type\": \"card\", \"data\": {\"card_name\": \"Instellingen\", \"col\": 3}}]",
+  "creation": "2026-08-31 00:00:00.000000",
+  "doctype": "Workspace",
+  "for_user": "",
+  "icon": "accounts",
+  "is_hidden": 0,
+  "label": "NixFact",
+  "links": [
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Verkopen",
+    "link_type": "",
+    "onboard": 0,
+    "type": "Card Break"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Facturen",
+    "link_to": "NixFact Factuur",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Offertes",
+    "link_to": "NixFact Offerte",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Abonnementen",
+    "link_to": "NixFact Abonnement",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Klanten",
+    "link_to": "Customer",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Inkopen",
+    "link_type": "",
+    "onboard": 0,
+    "type": "Card Break"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Inkoopfacturen",
+    "link_to": "NixFact Inkoopfactuur",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Kostencategorieën",
+    "link_to": "NixFact Kostencategorie",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Leveranciers",
+    "link_to": "Supplier",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Bank & Betalingen",
+    "link_type": "",
+    "onboard": 0,
+    "type": "Card Break"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Banktransacties",
+    "link_to": "NixFact Bank Transactie",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Bankkoppelingen",
+    "link_to": "NixFact Bank Koppeling",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Instellingen",
+    "link_type": "",
+    "onboard": 0,
+    "type": "Card Break"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "NixFact Instellingen",
+    "link_to": "NixFact Instellingen",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+   }
+  ],
+  "modified": "2026-08-31 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "NixFact Integration",
+  "name": "NixFact",
+  "number_cards": [
+   {
+    "label": "Openstaande facturen",
+    "number_card_name": "NixFact Openstaande facturen"
+   },
+   {
+    "label": "Facturen te laat",
+    "number_card_name": "NixFact Facturen te laat"
+   },
+   {
+    "label": "Omzet deze maand",
+    "number_card_name": "NixFact Omzet deze maand"
+   },
+   {
+    "label": "Openstaand bedrag",
+    "number_card_name": "NixFact Openstaand bedrag"
+   },
+   {
+    "label": "Lopende abonnementen",
+    "number_card_name": "NixFact Lopende abonnementen"
+   }
+  ],
+  "owner": "Administrator",
+  "parent_page": "",
+  "public": 1,
+  "quick_lists": [],
+  "sequence_id": 1,
+  "shortcuts": [
+   {
+    "color": "Blue",
+    "doc_view": "List",
+    "label": "Facturen",
+    "link_to": "NixFact Factuur",
+    "type": "DocType"
+   },
+   {
+    "color": "Green",
+    "doc_view": "List",
+    "label": "Offertes",
+    "link_to": "NixFact Offerte",
+    "type": "DocType"
+   },
+   {
+    "color": "Purple",
+    "doc_view": "List",
+    "label": "Abonnementen",
+    "link_to": "NixFact Abonnement",
+    "type": "DocType"
+   },
+   {
+    "color": "Orange",
+    "doc_view": "List",
+    "label": "Banktransacties",
+    "link_to": "NixFact Bank Transactie",
+    "type": "DocType"
+   },
+   {
+    "color": "Grey",
+    "doc_view": "",
+    "label": "Instellingen",
+    "link_to": "NixFact Instellingen",
+    "type": "DocType"
+   }
+  ],
+  "title": "NixFact"
+ }
+]

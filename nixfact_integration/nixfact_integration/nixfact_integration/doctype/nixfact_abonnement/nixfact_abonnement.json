@@ -61,7 +61,8 @@
    "label": "Status",
    "options": "Actief\nGepauzeerd\nBeeindigd",
    "reqd": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "company",
@@ -79,8 +80,7 @@
    "fieldname": "bedrag_excl_btw",
    "fieldtype": "Currency",
    "label": "Bedrag Excl. BTW",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "default": "21",
@@ -96,7 +96,8 @@
    "fieldname": "bedrag_incl_btw",
    "fieldtype": "Currency",
    "label": "Bedrag Incl. BTW",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 1
   },
   {
    "fieldname": "section_break_planning",
@@ -109,7 +110,8 @@
    "fieldtype": "Select",
    "label": "Frequentie",
    "options": "Maandelijks\nKwartaal\nHalfjaarlijks\nJaarlijks",
-   "reqd": 1
+   "reqd": 1,
+   "in_list_view": 1
   },
   {
    "fieldname": "startdatum",
