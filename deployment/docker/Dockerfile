@@ -158,6 +158,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -ms /bin/bash frappe
+
+# node-runtime voor de socketio-service (realtime, o.a. Frappe CRM). De
+# node_modules (socket.io e.a.) komen al mee via de bench-copy hieronder;
+# alleen het binary zelf bleef in de builder-stage hangen.
+COPY --from=builder /usr/bin/node /usr/bin/node
+
 USER frappe
 WORKDIR /home/frappe
 
