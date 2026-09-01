@@ -169,10 +169,11 @@ services:
   socketio:
     image: nixfact:${NIXFACT_TAG:-local}
     restart: unless-stopped
-    # backend-only: Caddy (VPS) bereikt deze via de gepubliceerde poort, net
-    # als de webdienst. Zonder deze service + Caddy-route voor /socket.io
-    # blijft realtime (o.a. Frappe CRM) 404-en op productie.
-    networks: [backend]
+    # frontend is nodig: poort-publicatie werkt niet op een internal network
+    # (Docker exposeert dan niets). Caddy (VPS) bereikt de service via de
+    # gepubliceerde poort, net als de webdienst. Zonder deze service +
+    # Caddy-route voor /socket.io blijft realtime (o.a. Frappe CRM) 404-en.
+    networks: [frontend, backend]
     depends_on:
       redis-queue: {condition: service_healthy}
     command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
