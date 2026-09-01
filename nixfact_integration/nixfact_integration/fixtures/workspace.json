@@ -205,6 +205,7 @@
     "type": "DocType"
    }
   ],
-  "title": "NixFact"
+  "title": "NixFact",
+  "type": "Workspace"
  }
 ]
