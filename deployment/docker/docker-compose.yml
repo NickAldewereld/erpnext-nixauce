@@ -142,7 +142,10 @@ services:
     networks: [backend]
     depends_on:
       nixfact: {condition: service_healthy}
-    command: ["bench", "worker", "--queue", "short,long"]
+    # short+long+default: Frappe v17 stuurt alles behalve Long/Maintenance naar
+    # "default" (ScheduledJobType.get_queue_name). Zonder default-consumer
+    # stapelen hourly/daily/cron-jobs onzichtbaar op in redis.
+    command: ["bench", "worker", "--queue", "short,long,default"]
     environment:
       DB_HOST: mariadb
       DB_PORT: 3306
@@ -162,6 +165,25 @@ services:
     cap_drop: [ALL]
     mem_limit: 768m
     pids_limit: 200
+
+  socketio:
+    image: nixfact:${NIXFACT_TAG:-local}
+    restart: unless-stopped
+    # backend-only: Caddy (VPS) bereikt deze via de gepubliceerde poort, net
+    # als de webdienst. Zonder deze service + Caddy-route voor /socket.io
+    # blijft realtime (o.a. Frappe CRM) 404-en op productie.
+    networks: [backend]
+    depends_on:
+      redis-queue: {condition: service_healthy}
+    command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    ports:
+      - "${BIND_HOST:-127.0.0.1}:${SOCKETIO_PORT:-9000}:9000"
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 256m
+    pids_limit: 100
 
   scheduler:
     image: nixfact:${NIXFACT_TAG:-local}
